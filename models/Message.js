@@ -1,15 +1,21 @@
 const mongoose = require('mongoose');
 
 const MessageSchema = new mongoose.Schema({
-  conversationId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Conversation',
-    required: true
-  },
   sender: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
+  },
+  receiver: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  // Optional field - can be null for direct messages
+  conversationId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Conversation',
+    default: null
   },
   content: {
     type: String,
@@ -37,16 +43,10 @@ const MessageSchema = new mongoose.Schema({
     enum: ['sent', 'delivered', 'read'],
     default: 'sent'
   },
-  readBy: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    readAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
+  readAt: {
+    type: Date,
+    default: null
+  },
   reactions: [{
     user: {
       type: mongoose.Schema.Types.ObjectId,
@@ -73,5 +73,9 @@ const MessageSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// Create indexes for better performance
+MessageSchema.index({ sender: 1, receiver: 1 });
+MessageSchema.index({ receiver: 1, status: 1 });
 
 module.exports = mongoose.model('Message', MessageSchema);

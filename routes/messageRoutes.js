@@ -1,34 +1,26 @@
 const express = require('express');
 const router = express.Router();
 const {
-  sendMessage,
-  getMessages,
-  updateMessageStatus,
+  sendDirectMessage,
+  getMessagesByUser,
+  getRecentConversations,
   deleteMessage,
   getUnreadCount,
-  searchMessages,
-  forwardMessage,
-  reactToMessage,
-  removeReaction
+  searchMessages
 } = require('../controllers/messageController');
 const auth = require('../middleware/auth');
 
 // Apply auth middleware to all routes
 router.use(auth);
 
-// Message core functionality
-router.post('/', sendMessage);
-router.get('/:conversationId', getMessages);
-router.put('/:messageId/status', updateMessageStatus);
+// Direct messaging
+router.post('/send', sendDirectMessage);
+router.get('/user/:userId', getMessagesByUser);
+router.get('/conversations', getRecentConversations);
+
+// Message management
 router.delete('/:messageId', deleteMessage);
-
-// Additional message features
 router.get('/unread', getUnreadCount);
-router.get('/:conversationId/search', searchMessages);
-router.post('/:messageId/forward', forwardMessage);
-
-// Reactions
-router.post('/:messageId/react', reactToMessage);
-router.delete('/:messageId/react', removeReaction);
+router.get('/search', searchMessages);
 
 module.exports = router;

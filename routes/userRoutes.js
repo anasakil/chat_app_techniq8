@@ -16,6 +16,9 @@ router.put('/me', upload.single('profilePicture'), userController.updateProfile)
 router.put('/update-password', userController.updatePassword);
 router.put('/update-status', userController.updateStatus);
 
+// Get all users - NEW ENDPOINT
+router.get('/all', userController.getAllUsers);
+
 // User search and contacts
 router.get('/search', userController.searchUsers);
 router.get('/contacts', userController.getUserContacts);

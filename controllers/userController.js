@@ -496,6 +496,30 @@ const checkUsernameAvailability = async (req, res, next) => {
   }
 };
 
+
+
+// @desc    Get all users except the current user
+// @route   GET /api/users/all
+// @access  Private
+const getAllUsers = async (req, res, next) => {
+    try {
+      // Get current user
+      const currentUserId = req.user._id;
+      
+      // Find all users except the current one
+      const users = await User.find({ _id: { $ne: currentUserId } })
+        .select('username email profilePicture status lastSeen')
+        .sort({ username: 1 });
+      
+      res.json(users);
+    } catch (error) {
+      console.error('Error getting all users:', error);
+      next(error);
+    }
+  };
+
+  
+
 module.exports = {
   getCurrentUser,
   updateProfile,
@@ -511,5 +535,6 @@ module.exports = {
   getOnlineUsers,
   getUserById,
   getUserStatus,
-  checkUsernameAvailability
+  checkUsernameAvailability,
+  getAllUsers 
 };
