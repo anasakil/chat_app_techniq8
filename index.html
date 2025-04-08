@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App Test Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #4a69bd;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .tab-container {
+            margin-top: 20px;
+        }
+        .tabs {
+            display: flex;
+            background-color: #f0f0f0;
+            border-radius: 5px 5px 0 0;
+            overflow: hidden;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #e0e0e0;
+        }
+        .tab.active {
+            background-color: white;
+            font-weight: bold;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+            background-color: white;
+            border-radius: 0 0 5px 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4a69bd;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #3c5aa6;
+        }
+        .response-container {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .conversation-list {
+            list-style: none;
+            padding: 0;
+        }
+        .conversation-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .conversation-item:hover {
+            background-color: #f5f5f5;
+        }
+        .message-container {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        .message {
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border-radius: 18px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .message-sent {
+            background-color: #dcf8c6;
+            margin-left: auto;
+        }
+        .message-received {
+            background-color: #f0f0f0;
+        }
+        .user-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .online-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-left: 5px;
+        }
+        .online {
+            background-color: #4cd137;
+        }
+        .offline {
+            background-color: #718093;
+        }
+        .away {
+            background-color: #fbc531;
+        }
+        .flex-container {
+            display: flex;
+            gap: 20px;
+        }
+        .flex-item {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Chat Application Test Interface</h1>
+        </div>
+
+        <!-- Status display -->
+        <div id="status" style="padding: 10px; background-color: #eee; margin: 10px 0; border-radius: 4px;">
+            Not authenticated
+        </div>
+
+        <div class="tab-container">
+            <div class="tabs">
+                <div class="tab active" data-tab="auth">Authentication</div>
+                <div class="tab" data-tab="profile">User Profile</div>
+                <div class="tab" data-tab="users">Users & Contacts</div>
+                <div class="tab" data-tab="conversations">Conversations</div>
+                <div class="tab" data-tab="messages">Messages</div>
+                <div class="tab" data-tab="files">Files</div>
+            </div>
+
+            <!-- Auth Tab -->
+            <div class="tab-content active" id="auth-tab">
+                <h2>Authentication</h2>
+                
+                <div class="form-group">
+                    <label>Action:</label>
+                    <select id="auth-action">
+                        <option value="register">Register</option>
+                        <option value="login">Login</option>
+                        <option value="logout">Logout</option>
+                    </select>
+                </div>
+
+                <div id="auth-register-form">
+                    <div class="form-group">
+                        <label>Username:</label>
+                        <input type="text" id="register-username" placeholder="Enter username">
+                    </div>
+                    <div class="form-group">
+                        <label>Email:</label>
+                        <input type="email" id="register-email" placeholder="Enter email">
+                    </div>
+                    <div class="form-group">
+                        <label>Password:</label>
+                        <input type="password" id="register-password" placeholder="Enter password">
+                    </div>
+                </div>
+
+                <div id="auth-login-form" style="display: none;">
+                    <div class="form-group">
+                        <label>Email:</label>
+                        <input type="email" id="login-email" placeholder="Enter email">
+                    </div>
+                    <div class="form-group">
+                        <label>Password:</label>
+                        <input type="password" id="login-password" placeholder="Enter password">
+                    </div>
+                </div>
+
+                <button id="auth-submit">Submit</button>
+
+                <div class="response-container">
+                    <h3>Response:</h3>
+                    <pre id="auth-response"></pre>
+                </div>
+            </div>
+
+            <!-- Profile Tab -->
+            <div class="tab-content" id="profile-tab">
+                <h2>User Profile</h2>
+                
+                <div class="form-group">
+                    <label>Action:</label>
+                    <select id="profile-action">
+                        <option value="get-profile">Get Profile</option>
+                        <option value="update-profile">Update Profile</option>
+                        <option value="update-password">Update Password</option>
+                        <option value="update-status">Update Status</option>
+                    </select>
+                </div>
+
+                <div id="update-profile-form" style="display: none;">
+                    <div class="form-group">
+                        <label>Username:</label>
+                        <input type="text" id="update-username" placeholder="Enter new username">
+                    </div>
+                    <div class="form-group">
+                        <label>Email:</label>
+                        <input type="email" id="update-email" placeholder="Enter new email">
+                    </div>
+                    <div class="form-group">
+                        <label>Bio:</label>
+                        <textarea id="update-bio" placeholder="Enter bio"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Profile Picture:</label>
+                        <input type="file" id="update-profile-picture">
+                    </div>
+                </div>
+
+                <div id="update-password-form" style="display: none;">
+                    <div class="form-group">
+                        <label>Current Password:</label>
+                        <input type="password" id="current-password" placeholder="Enter current password">
+                    </div>
+                    <div class="form-group">
+                        <label>New Password:</label>
+                        <input type="password" id="new-password" placeholder="Enter new password">
+                    </div>
+                </div>
+
+                <div id="update-status-form" style="display: none;">
+                    <div class="form-group">
+                        <label>Status:</label>
+                        <select id="user-status">
+                            <option value="online">Online</option>
+                            <option value="offline">Offline</option>
+                            <option value="away">Away</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button id="profile-submit">Submit</button>
+
+                <div class="response-container">
+                    <h3>Response:</h3>
+                    <pre id="profile-response"></pre>
+                </div>
+            </div>
+
+            <!-- Users & Contacts Tab -->
+            <div class="tab-content" id="users-tab">
+                <h2>Users & Contacts</h2>
+                
+                <div class="form-group">
+                    <label>Action:</label>
+                    <select id="users-action">
+                        <option value="search-users">Search Users</option>
+                        <option value="get-contacts">Get Contacts</option>
+                        <option value="add-contact">Add Contact</option>
+                        <option value="remove-contact">Remove Contact</option>
+                        <option value="block-user">Block User</option>
+                        <option value="unblock-user">Unblock User</option>
+                        <option value="get-blocked">Get Blocked Users</option>
+                        <option value="get-online">Get Online Users</option>
+                        <option value="get-user">Get User by ID</option>
+                    </select>
+                </div>
+
+                <div id="search-users-form">
+                    <div class="form-group">
+                        <label>Search Query:</label>
+                        <input type="text" id="search-query" placeholder="Enter search query">
+                    </div>
+                </div>
+
+                <div id="user-id-form" style="display: none;">
+                    <div class="form-group">
+                        <label>User ID:</label>
+                        <input type="text" id="user-id" placeholder="Enter user ID">
+                    </div>
+                </div>
+
+                <button id="users-submit">Submit</button>
+
+                <div class="response-container">
+                    <h3>Response:</h3>
+                    <div id="users-response"></div>
+                </div>
+            </div>
+
+            <!-- Conversations Tab -->
+            <div class="tab-content" id="conversations-tab">
+                <h2>Conversations</h2>
+                
+                <div class="form-group">
+                    <label>Action:</label>
+                    <select id="conversations-action">
+                        <option value="get-conversations">Get Conversations</option>
+                        <option value="create-conversation">Create Conversation</option>
+                        <option value="get-conversation">Get Conversation by ID</option>
+                    </select>
+                </div>
+
+                <div id="create-conversation-form" style="display: none;">
+                    <div class="form-group">
+                        <label>Participant IDs (comma separated):</label>
+                        <input type="text" id="conversation-participants" placeholder="Enter participant IDs">
+                    </div>
+                    <div class="form-group">
+                        <label>Is Group Conversation:</label>
+                        <select id="is-group">
+                            <option value="false">No</option>
+                            <option value="true">Yes</option>
+                        </select>
+                    </div>
+                    <div id="group-details" style="display: none;">
+                        <div class="form-group">
+                            <label>Group Name:</label>
+                            <input type="text" id="group-name" placeholder="Enter group name">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="conversation-id-form" style="display: none;">
+                    <div class="form-group">
+                        <label>Conversation ID:</label>
+                        <input type="text" id="conversation-id" placeholder="Enter conversation ID">
+                    </div>
+                </div>
+
+                <button id="conversations-submit">Submit</button>
+
+                <div class="response-container">
+                    <h3>Response:</h3>
+                    <div id="conversations-response"></div>
+                </div>
+            </div>
+
+            <!-- Messages Tab -->
+            <div class="tab-content" id="messages-tab">
+                <h2>Messages</h2>
+                
+                <div class="flex-container">
+                    <div class="flex-item">
+                        <div class="form-group">
+                            <label>Conversation:</label>
+                            <select id="message-conversation-id">
+                                <option value="">Select conversation</option>
+                            </select>
+                        </div>
+                        
+                        <div class="message-container" id="message-list">
+                            <!-- Messages will be displayed here -->
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Message:</label>
+                            <textarea id="message-content" placeholder="Type a message"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>File:</label>
+                            <input type="file" id="message-file">
+                        </div>
+                        
+                        <button id="send-message">Send Message</button>
+                    </div>
+                    
+                    <div class="flex-item">
+                        <div class="form-group">
+                            <label>Action:</label>
+                            <select id="messages-action">
+                                <option value="get-messages">Get Messages</option>
+                                <option value="delete-message">Delete Message</option>
+                                <option value="get-unread">Get Unread Count</option>
+                                <option value="search-messages">Search Messages</option>
+                                <option value="forward-message">Forward Message</option>
+                                <option value="react-message">React to Message</option>
+                                <option value="remove-reaction">Remove Reaction</option>
+                            </select>
+                        </div>
+                        
+                        <div id="message-id-form" style="display: none;">
+                            <div class="form-group">
+                                <label>Message ID:</label>
+                                <input type="text" id="message-id" placeholder="Enter message ID">
+                            </div>
+                        </div>
+                        
+                        <div id="search-messages-form" style="display: none;">
+                            <div class="form-group">
+                                <label>Search Query:</label>
+                                <input type="text" id="message-search-query" placeholder="Enter search query">
+                            </div>
+                        </div>
+                        
+                        <div id="forward-message-form" style="display: none;">
+                            <div class="form-group">
+                                <label>Target Conversation ID:</label>
+                                <input type="text" id="target-conversation-id" placeholder="Enter target conversation ID">
+                            </div>
+                        </div>
+                        
+                        <div id="react-message-form" style="display: none;">
+                            <div class="form-group">
+                                <label>Reaction:</label>
+                                <select id="message-reaction">
+                                    <option value="like">Like</option>
+                                    <option value="love">Love</option>
+                                    <option value="laugh">Laugh</option>
+                                    <option value="sad">Sad</option>
+                                    <option value="angry">Angry</option>
+                                    <option value="thumbsup">Thumbs Up</option>
+                                    <option value="thumbsdown">Thumbs Down</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <button id="messages-submit">Submit</button>
+                        
+                        <div class="response-container">
+                            <h3>Response:</h3>
+                            <pre id="messages-response"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Files Tab -->
+            <div class="tab-content" id="files-tab">
+                <h2>Files</h2>
+                
+                <div class="form-group">
+                    <label>Action:</label>
+                    <select id="files-action">
+                        <option value="upload-file">Upload File</option>
+                        <option value="download-file">Download File</option>
+                        <option value="delete-file">Delete File</option>
+                    </select>
+                </div>
+
+                <div id="upload-file-form">
+                    <div class="form-group">
+                        <label>Conversation ID:</label>
+                        <input type="text" id="file-conversation-id" placeholder="Enter conversation ID">
+                    </div>
+                    <div class="form-group">
+                        <label>Message:</label>
+                        <input type="text" id="file-message" placeholder="Enter message">
+                    </div>
+                    <div class="form-group">
+                        <label>File:</label>
+                        <input type="file" id="file-upload">
+                    </div>
+                </div>
+
+                <div id="file-message-id-form" style="display: none;">
+                    <div class="form-group">
+                        <label>Message ID:</label>
+                        <input type="text" id="file-message-id" placeholder="Enter message ID">
+                    </div>
+                </div>
+
+                <button id="files-submit">Submit</button>
+
+                <div class="response-container">
+                    <h3>Response:</h3>
+                    <pre id="files-response"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:4400/api';
+        let token = localStorage.getItem('token');
+        let currentUser = null;
+        
+        // Check if user is already logged in
+        if (token) {
+            fetch(`${API_URL}/users/me`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.message) {
+                    currentUser = data;
+                    document.getElementById('status').innerHTML = `Logged in as: ${data.username}`;
+                    loadConversations();
+                }
+            })
+            .catch(err => {
+                console.error('Error checking auth status:', err);
+                localStorage.removeItem('token');
+                token = null;
+            });
+        }
+        
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs and content
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding content
+                tab.classList.add('active');
+                document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
+            });
+        });
+        
+        // Auth action selector
+        document.getElementById('auth-action').addEventListener('change', (e) => {
+            const action = e.target.value;
+            
+            document.getElementById('auth-register-form').style.display = action === 'register' ? 'block' : 'none';
+            document.getElementById('auth-login-form').style.display = action === 'login' ? 'block' : 'none';
+        });
+        
+        // Auth submit
+        document.getElementById('auth-submit').addEventListener('click', () => {
+            const action = document.getElementById('auth-action').value;
+            
+            if (action === 'register') {
+                const username = document.getElementById('register-username').value;
+                const email = document.getElementById('register-email').value;
+                const password = document.getElementById('register-password').value;
+                
+                fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, email, password })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('auth-response').textContent = JSON.stringify(data, null, 2);
+                    
+                    if (data.token) {
+                        localStorage.setItem('token', data.token);
+                        token = data.token;
+                        currentUser = data;
+                        document.getElementById('status').innerHTML = `Logged in as: ${data.username}`;
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('auth-response').textContent = JSON.stringify(err, null, 2);
+                });
+            } else if (action === 'login') {
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                
+                fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('auth-response').textContent = JSON.stringify(data, null, 2);
+                    
+                    if (data.token) {
+                        localStorage.setItem('token', data.token);
+                        token = data.token;
+                        currentUser = data;
+                        document.getElementById('status').innerHTML = `Logged in as: ${data.username}`;
+                        loadConversations();
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('auth-response').textContent = JSON.stringify(err, null, 2);
+                });
+            } else if (action === 'logout') {
+                fetch(`${API_URL}/auth/logout`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('auth-response').textContent = JSON.stringify(data, null, 2);
+                    
+                    localStorage.removeItem('token');
+                    token = null;
+                    currentUser = null;
+                    document.getElementById('status').innerHTML = 'Not authenticated';
+                })
+                .catch(err => {
+                    document.getElementById('auth-response').textContent = JSON.stringify(err, null, 2);
+                });
+            }
+        });
+        
+        // Profile action selector
+        document.getElementById('profile-action').addEventListener('change', (e) => {
+            const action = e.target.value;
+            
+            document.getElementById('update-profile-form').style.display = action === 'update-profile' ? 'block' : 'none';
+            document.getElementById('update-password-form').style.display = action === 'update-password' ? 'block' : 'none';
+            document.getElementById('update-status-form').style.display = action === 'update-status' ? 'block' : 'none';
+        });
+        
+        // Profile submit
+        document.getElementById('profile-submit').addEventListener('click', () => {
+            if (!token) {
+                document.getElementById('profile-response').textContent = 'Not authenticated';
+                return;
+            }
+            
+            const action = document.getElementById('profile-action').value;
+            
+            if (action === 'get-profile') {
+                fetch(`${API_URL}/auth/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('profile-response').textContent = JSON.stringify(data, null, 2);
+                })
+                .catch(err => {
+                    document.getElementById('profile-response').textContent = JSON.stringify(err, null, 2);
+                });
+            } else if (action === 'update-profile') {
+                const username = document.getElementById('update-username').value;
+                const email = document.getElementById('update-email').value;
+                const bio = document.getElementById('update-bio').value;
+                const profilePicture = document.getElementById('update-profile-picture').files[0];
+                
+                const formData = new FormData();
+                if (username) formData.append('username', username);
+                if (email) formData.append('email', email);
+                if (bio) formData.append('bio', bio);
+                if (profilePicture) formData.append('profilePicture', profilePicture);
+                
+                fetch(`${API_URL}/auth/profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('profile-response').textContent = JSON.stringify(data, null, 2);
+                })
+                .catch(err => {
+                    document.getElementById('profile-response').textContent = JSON.stringify(err, null, 2);
+                });
+            } else if (action === 'update-password') {
+                const currentPassword = document.getElementById('current-password').value;
+                const newPassword = document.getElementById('new-password').value;
+                
+                fetch(`${API_URL}/users/update-password`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ currentPassword, newPassword })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('profile-response').textContent = JSON.stringify(data, null, 2);
+                })
+                .catch(err => {
+                    document.getElementById('profile-response').textContent = JSON.stringify(err, null, 2);
+                });
+            } else if (action === 'update-status') {
+                const status = document.getElementById('user-status').value;
+                
+                fetch(`${API_URL}/users/update-status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('profile-response').textContent = JSON.stringify(data, null, 2);
+                })
+                .catch(err => {
+                    document.getElementById('profile-response').textContent = JSON.stringify(err, null, 2);
+                });
+            }
+        });
+        
+        // Users action selector
+        document.getElementById('users-action').addEventListener('change', (e) => {
+            const action = e.target.value;
+            
+            document.getElementById('search-users-form').style.display = action === 'search-users' ? 'block' : 'none';
+            document.getElementById('user-id-form').style.display = ['add-contact', 'remove-contact', 'block-user', 'unblock-user', 'get-user'].includes(action) ? 'block' : 'none';
+        });
+        
+        // Users submit
+        document.getElementById('users-submit').addEventListener('click', () => {
+            if (!token) {
+                document.getElementById('users-response').textContent = 'Not authenticated';
+                return;
+            }
+            
+            const action = document.getElementById('users-action').value;
+            
+            if (action === 'search-users') {
+                const query = document.getElementById('search-query').value;
+                
+                fetch(`${API_URL}/users/search?query=${query}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    const usersList = document.createElement('div');
+                    usersList.className = 'users-list';
+                    
+                    data.forEach(user => {
+                        const userItem = document.createElement('div');
+                        userItem.className = 'user-item';
+                        
+                        const avatar = document.createElement('img');
+                        avatar.className = 'user-avatar';
+                        avatar.src = user.profilePicture ? `${API_URL}/${user.profilePicture}` : 'https://via.placeholder.com/40';
+                        userItem.appendChild(avatar);
+                        
+                        const userInfo = document.createElement('div');
+                        userInfo.innerHTML = `
+                            <strong>${user.username}</strong> (${user.email})
+                            <div>ID: ${user._id}</div>
+                        `;
+                        userItem.appendChild(userInfo);
+                        
+                        const statusIndicator = document.createElement('div');
+                        statusIndicator.className = `online-indicator ${user.status}`;
+                        userItem.appendChild(statusIndicator);
+                        
+                        usersList.appendChild(userItem);
+                    });
+                    
+                    document.getElementById('users-response').innerHTML = '';
+                    document.getElementById('users-response').appendChild(usersList);
+                })
+                .catch(err => {
+                    document.getElementById('users-response').textContent = JSON.stringify(err, null, 2);
+                });
+            } else if (action === 'get-contacts') {
+                fetch(`${API_URL}/users/contacts`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    const contactsList = document.createElement('div');
+                    contactsList.className = 'users-list';
+                    
+                    data.forEach(contact => {
+                        const contactItem = document.createElement('div');
+                        contactItem.className = 'user-item';
+                        
+                        const avatar = document.createElement('img');
+                        avatar.className = 'user-avatar';
+                        avatar.src = contact.profilePicture ? `${API_URL}/${contact.profilePicture}` : 'https://via.placeholder.com/40';
+                        contactItem.appendChild(avatar);
+                        
+                        const contactInfo = document.createElement('div');
+                        contactInfo.innerHTML = `
+                            <strong>${contact.username}</strong>
+                            <div>ID: ${contact._id}</div>
+                        `;
+                        contactItem.appendChild(contactInfo);
+                        
+                        const statusIndicator = document.createElement('div');
+                                            statusIndicator.className = `online-indicator ${contact.status}`;
+                                            contactItem.appendChild(statusIndicator);
+                                            contactsList.appendChild(contactItem);
+                                        });
+
+                                        document.getElementById('users-response').innerHTML = '';
+                                        document.getElementById('users-response').appendChild(contactsList);
+                                    })
+                                    .catch(err => {
+                                        document.getElementById('users-response').textContent = JSON.stringify(err, null, 2);
+                                    });
+                                }
+                            });
+                        </script>
+                        
