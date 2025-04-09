@@ -5,6 +5,11 @@ const http = require('http');
 const socketIO = require('socket.io');
 const dotenv = require('dotenv');
 const errorHandler = require('./middleware/errorHandler');
+
+
+
+
+dotenv.config();
  
 // Routes
 const authRoutes = require('./routes/authRoutes');
@@ -13,8 +18,7 @@ const messageRoutes = require('./routes/messageRoutes');
 const conversationRoutes = require('./routes/conversationRoutes');
 const fileRoutes = require('./routes/fileRoutes');
  
-// Load environment variables
-dotenv.config();
+
  
 // Initialize Express
 const app = express();

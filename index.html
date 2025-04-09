@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,20 +12,20 @@
             margin: 0;
             padding: 0;
         }
-        
+
         body {
             font-family: Arial, sans-serif;
             background-color: #f5f5f5;
             color: #333;
             line-height: 1.6;
         }
-        
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
-        
+
         /* Header styles */
         .header {
             background-color: #4a69bd;
@@ -35,21 +36,21 @@
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .header h1 {
             font-size: 1.5rem;
         }
-        
+
         .user-controls {
             display: flex;
             align-items: center;
         }
-        
+
         .user-info {
             margin-right: 15px;
             font-size: 0.9rem;
         }
-        
+
         .logout-btn {
             padding: 5px 10px;
             background-color: rgba(255, 255, 255, 0.2);
@@ -59,11 +60,11 @@
             cursor: pointer;
             font-size: 0.8rem;
         }
-        
+
         .logout-btn:hover {
             background-color: rgba(255, 255, 255, 0.3);
         }
-        
+
         /* Authentication forms */
         .auth-container {
             max-width: 400px;
@@ -71,26 +72,26 @@
             padding: 25px;
             background-color: white;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-        
+
         .auth-container h2 {
             margin-bottom: 20px;
             color: #4a69bd;
             text-align: center;
         }
-        
+
         .form-group {
             margin-bottom: 15px;
         }
-        
+
         .form-group label {
             display: block;
             margin-bottom: 5px;
             font-weight: 600;
             color: #555;
         }
-        
+
         .form-group input {
             width: 100%;
             padding: 10px;
@@ -98,13 +99,13 @@
             border-radius: 4px;
             font-size: 1rem;
         }
-        
+
         .form-group input:focus {
             border-color: #4a69bd;
             outline: none;
             box-shadow: 0 0 0 2px rgba(74, 105, 189, 0.2);
         }
-        
+
         .auth-btn {
             width: 100%;
             padding: 12px;
@@ -116,42 +117,42 @@
             font-size: 1rem;
             margin-top: 10px;
         }
-        
+
         .auth-btn:hover {
             background-color: #3c5aa6;
         }
-        
+
         .auth-switch {
             text-align: center;
             margin-top: 20px;
             font-size: 0.9rem;
         }
-        
+
         .auth-switch a {
             color: #4a69bd;
             text-decoration: none;
         }
-        
+
         .auth-switch a:hover {
             text-decoration: underline;
         }
-        
+
         .error-message {
             color: #f44336;
             font-size: 0.85rem;
             margin-top: 5px;
         }
-        
+
         /* Chat interface */
         .chat-container {
             display: flex;
             height: 80vh;
             background-color: white;
             border-radius: 0 0 8px 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
-        
+
         /* Users/conversations sidebar */
         .sidebar {
             width: 300px;
@@ -159,7 +160,7 @@
             display: flex;
             flex-direction: column;
         }
-        
+
         .sidebar-header {
             padding: 15px;
             border-bottom: 1px solid #eee;
@@ -167,16 +168,16 @@
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .sidebar-title {
             font-weight: 600;
             color: #555;
         }
-        
+
         .sidebar-actions {
             display: flex;
         }
-        
+
         .sidebar-btn {
             background: none;
             border: none;
@@ -185,12 +186,12 @@
             margin-left: 10px;
             font-size: 1.2rem;
         }
-        
+
         .search-box {
             padding: 10px 15px;
             border-bottom: 1px solid #eee;
         }
-        
+
         .search-input {
             width: 100%;
             padding: 8px 10px;
@@ -198,17 +199,17 @@
             border-radius: 15px;
             font-size: 0.9rem;
         }
-        
+
         .search-input:focus {
             outline: none;
             border-color: #4a69bd;
         }
-        
+
         .users-list {
             flex: 1;
             overflow-y: auto;
         }
-        
+
         .user-item {
             padding: 12px 15px;
             border-bottom: 1px solid #f5f5f5;
@@ -217,15 +218,15 @@
             align-items: center;
             transition: background-color 0.2s;
         }
-        
+
         .user-item:hover {
             background-color: #f9f9f9;
         }
-        
+
         .user-item.active {
             background-color: #e3f2fd;
         }
-        
+
         .user-avatar {
             width: 40px;
             height: 40px;
@@ -239,19 +240,20 @@
             color: #666;
             flex-shrink: 0;
         }
-        
+
         .user-details {
             flex: 1;
-            min-width: 0; /* For text overflow to work */
+            min-width: 0;
+            /* For text overflow to work */
         }
-        
+
         .user-name {
             font-weight: 600;
             color: #333;
             display: flex;
             justify-content: space-between;
         }
-        
+
         .user-last-message {
             font-size: 0.8rem;
             color: #888;
@@ -260,12 +262,12 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        
+
         .message-time {
             font-size: 0.7rem;
             color: #999;
         }
-        
+
         .unread-badge {
             background-color: #4a69bd;
             color: white;
@@ -278,7 +280,7 @@
             font-size: 0.7rem;
             margin-left: 5px;
         }
-        
+
         .status-indicator {
             width: 8px;
             height: 8px;
@@ -286,26 +288,26 @@
             margin-left: 5px;
             flex-shrink: 0;
         }
-        
+
         .status-online {
             background-color: #4CAF50;
         }
-        
+
         .status-offline {
             background-color: #9E9E9E;
         }
-        
+
         .status-away {
             background-color: #FFC107;
         }
-        
+
         /* Chat box */
         .chat-box {
             flex: 1;
             display: flex;
             flex-direction: column;
         }
-        
+
         .chat-header {
             padding: 15px;
             border-bottom: 1px solid #eee;
@@ -313,28 +315,28 @@
             align-items: center;
             justify-content: space-between;
         }
-        
+
         .chat-header-user {
             display: flex;
             align-items: center;
         }
-        
+
         .chat-header-details {
             margin-left: 12px;
         }
-        
+
         .chat-header-name {
             font-weight: 600;
             color: #333;
         }
-        
+
         .chat-header-status {
             font-size: 0.8rem;
             color: #888;
             display: flex;
             align-items: center;
         }
-        
+
         .connection-status {
             font-size: 0.75rem;
             padding: 3px 8px;
@@ -342,17 +344,17 @@
             background-color: #f1f1f1;
             color: #666;
         }
-        
+
         .connection-status.connected {
             background-color: #e8f5e9;
             color: #4CAF50;
         }
-        
+
         .connection-status.disconnected {
             background-color: #ffebee;
             color: #F44336;
         }
-        
+
         .messages-container {
             flex: 1;
             padding: 15px;
@@ -361,13 +363,13 @@
             flex-direction: column;
             background-color: #f9f9f9;
         }
-        
+
         .message-date-divider {
             text-align: center;
             margin: 10px 0;
             position: relative;
         }
-        
+
         .message-date {
             background-color: #f9f9f9;
             padding: 0 10px;
@@ -376,7 +378,7 @@
             position: relative;
             z-index: 1;
         }
-        
+
         .message-date-divider::before {
             content: '';
             position: absolute;
@@ -387,7 +389,7 @@
             background-color: #eee;
             z-index: 0;
         }
-        
+
         .message {
             max-width: 70%;
             padding: 10px 15px;
@@ -396,23 +398,23 @@
             position: relative;
             word-break: break-word;
         }
-        
+
         .message-sent {
             align-self: flex-end;
             background-color: #e3f2fd;
             border-bottom-right-radius: 5px;
         }
-        
+
         .message-received {
             align-self: flex-start;
             background-color: #f1f1f1;
             border-bottom-left-radius: 5px;
         }
-        
+
         .message-content {
             margin-bottom: 4px;
         }
-        
+
         .message-info {
             display: flex;
             justify-content: flex-end;
@@ -420,37 +422,37 @@
             font-size: 0.7rem;
             color: #999;
         }
-        
+
         .message-status {
             margin-right: 5px;
         }
-        
+
         .message-error {
             background-color: #ffebee;
         }
-        
+
         .message-error .message-status {
             color: #F44336;
         }
-        
+
         .typing-indicator {
             padding: 8px 15px;
             font-size: 0.8rem;
             color: #888;
             font-style: italic;
         }
-        
+
         .message-input-container {
             border-top: 1px solid #eee;
             padding: 15px;
             background-color: white;
         }
-        
+
         .message-input-wrapper {
             display: flex;
             align-items: center;
         }
-        
+
         .message-input {
             flex: 1;
             padding: 10px 15px;
@@ -459,12 +461,12 @@
             font-size: 0.95rem;
             resize: none;
         }
-        
+
         .message-input:focus {
             outline: none;
             border-color: #4a69bd;
         }
-        
+
         .send-btn {
             margin-left: 10px;
             padding: 10px;
@@ -479,16 +481,16 @@
             align-items: center;
             justify-content: center;
         }
-        
+
         .send-btn:disabled {
             background-color: #bbb;
             cursor: not-allowed;
         }
-        
+
         .send-btn:not(:disabled):hover {
             background-color: #3c5aa6;
         }
-        
+
         /* Empty state */
         .empty-state {
             display: flex;
@@ -500,22 +502,22 @@
             text-align: center;
             color: #888;
         }
-        
+
         .empty-state-icon {
             font-size: 3rem;
             margin-bottom: 20px;
             color: #ddd;
         }
-        
+
         .empty-state-text {
             font-size: 1.1rem;
             margin-bottom: 10px;
         }
-        
+
         .empty-state-subtext {
             font-size: 0.9rem;
         }
-        
+
         /* Back button in search mode */
         .back-button {
             display: flex;
@@ -525,36 +527,37 @@
             cursor: pointer;
             border-bottom: 1px solid #eee;
         }
-        
+
         .back-button:hover {
             background-color: #eee;
         }
-        
+
         .back-icon {
             margin-right: 10px;
             font-size: 1.2rem;
         }
-        
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .chat-container {
                 flex-direction: column;
                 height: calc(100vh - 100px);
             }
-            
+
             .sidebar {
                 width: 100%;
                 height: 40%;
                 border-right: none;
                 border-bottom: 1px solid #eee;
             }
-            
+
             .chat-box {
                 height: 60%;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <!-- Header Section -->
@@ -565,7 +568,7 @@
                 <button id="logout-btn" class="logout-btn">Logout</button>
             </div>
         </div>
-        
+
         <!-- Login Form -->
         <div id="login-container" class="auth-container">
             <h2>Login</h2>
@@ -585,7 +588,7 @@
                 Don't have an account? <a href="#" id="show-register">Register here</a>
             </div>
         </div>
-        
+
         <!-- Register Form -->
         <div id="register-container" class="auth-container" style="display: none;">
             <h2>Create Account</h2>
@@ -610,7 +613,7 @@
                 Already have an account? <a href="#" id="show-login">Login here</a>
             </div>
         </div>
-        
+
         <!-- Chat Interface -->
         <div id="chat-container" class="chat-container" style="display: none;">
             <!-- Users/Conversations Sidebar -->
@@ -629,7 +632,7 @@
                     <!-- Users will be populated here -->
                 </div>
             </div>
-            
+
             <!-- Chat Area -->
             <div class="chat-box">
                 <div id="empty-chat" class="empty-state">
@@ -637,7 +640,7 @@
                     <div class="empty-state-text">Select a conversation to start chatting</div>
                     <div class="empty-state-subtext">Or start a new conversation by clicking the + button</div>
                 </div>
-                
+
                 <div id="active-chat" style="display: none; height: 100%; display: flex; flex-direction: column;">
                     <div class="chat-header">
                         <div id="chat-header-user" class="chat-header-user">
@@ -652,18 +655,19 @@
                         </div>
                         <div id="connection-status" class="connection-status">Connecting...</div>
                     </div>
-                    
+
                     <div id="messages-container" class="messages-container">
                         <!-- Messages will be populated here -->
                     </div>
-                    
+
                     <div id="typing-indicator" class="typing-indicator" style="display: none;">
                         Someone is typing...
                     </div>
-                    
+
                     <div class="message-input-container">
                         <div class="message-input-wrapper">
-                            <textarea id="message-input" class="message-input" placeholder="Type a message..." rows="1"></textarea>
+                            <textarea id="message-input" class="message-input" placeholder="Type a message..."
+                                rows="1"></textarea>
                             <button id="send-btn" class="send-btn" disabled>➤</button>
                         </div>
                     </div>
@@ -682,12 +686,15 @@
         let selectedUserId = null;
         let selectedUsername = null;
         let users = [];
-        let conversations = [];
         let typingTimeout = null;
         let isSearchMode = false;
-        let messageQueue = [];
         let socketConnected = false;
-        
+
+        // In-memory message storage (temporary)
+        let temporaryMessages = {}; // Format: { [conversationId]: [messages] }
+        let conversationList = []; // List of conversations
+        let messageQueue = []; // Messages waiting to be sent when socket reconnects
+
         // DOM Elements
         const loginContainer = document.getElementById('login-container');
         const registerContainer = document.getElementById('register-container');
@@ -715,7 +722,7 @@
         const connectionStatus = document.getElementById('connection-status');
         const typingIndicator = document.getElementById('typing-indicator');
         const sidebarTitle = document.getElementById('sidebar-title');
-        
+
         // Check if user is already logged in
         if (token) {
             fetch(`${API_URL}/users/me`, {
@@ -723,88 +730,88 @@
                     'Authorization': `Bearer ${token}`
                 }
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Authentication failed');
-                }
-                return response.json();
-            })
-            .then(data => {
-                currentUser = data;
-                showChatInterface();
-                initializeSocket();
-                loadConversations();
-            })
-            .catch(error => {
-                console.error('Auth error:', error);
-                localStorage.removeItem('token');
-                token = null;
-            });
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Authentication failed');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    currentUser = data;
+                    showChatInterface();
+                    initializeSocket();
+                    loadConversations();
+                })
+                .catch(error => {
+                    console.error('Auth error:', error);
+                    localStorage.removeItem('token');
+                    token = null;
+                });
         }
-        
+
         // Event Listeners
         showRegisterLink.addEventListener('click', (e) => {
             e.preventDefault();
             loginContainer.style.display = 'none';
             registerContainer.style.display = 'block';
         });
-        
+
         showLoginLink.addEventListener('click', (e) => {
             e.preventDefault();
             registerContainer.style.display = 'none';
             loginContainer.style.display = 'block';
         });
-        
+
         loginBtn.addEventListener('click', login);
         registerBtn.addEventListener('click', register);
         logoutBtn.addEventListener('click', logout);
         sendBtn.addEventListener('click', sendMessage);
         refreshBtn.addEventListener('click', loadConversations);
         newChatBtn.addEventListener('click', switchToSearchMode);
-        
+
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage();
             }
         });
-        
+
         messageInput.addEventListener('input', () => {
             // Auto-resize the textarea
             messageInput.style.height = 'auto';
             messageInput.style.height = messageInput.scrollHeight + 'px';
-            
+
             // Enable/disable send button based on content
             sendBtn.disabled = messageInput.value.trim() === '' || !selectedUserId;
-            
+
             // Emit typing event
             if (socket && socketConnected && selectedUserId) {
                 socket.emit('typing', {
                     receiverId: selectedUserId
                 });
-                
+
                 // Clear previous timeout
                 if (typingTimeout) {
                     clearTimeout(typingTimeout);
                 }
-                
+
                 // Set new timeout
                 typingTimeout = setTimeout(() => {
                     // You could emit a "stopped typing" event here
                 }, 3000);
             }
         });
-        
+
         searchInput.addEventListener('input', () => {
             const searchTerm = searchInput.value.trim().toLowerCase();
-            
+
             if (isSearchMode) {
                 // Search users
                 if (searchTerm === '') {
                     renderUsers(users);
                 } else {
-                    const filteredUsers = users.filter(user => 
-                        user.username.toLowerCase().includes(searchTerm) || 
+                    const filteredUsers = users.filter(user =>
+                        user.username.toLowerCase().includes(searchTerm) ||
                         (user.email && user.email.toLowerCase().includes(searchTerm))
                     );
                     renderUsers(filteredUsers);
@@ -812,16 +819,16 @@
             } else {
                 // Search conversations
                 if (searchTerm === '') {
-                    renderConversations(conversations);
+                    renderConversations(conversationList);
                 } else {
-                    const filteredConversations = conversations.filter(conv => 
+                    const filteredConversations = conversationList.filter(conv =>
                         conv.username.toLowerCase().includes(searchTerm)
                     );
                     renderConversations(filteredConversations);
                 }
             }
         });
-        
+
         // Functions
         function login() {
             const email = document.getElementById('email').value;
@@ -829,30 +836,30 @@
             const emailError = document.getElementById('email-error');
             const passwordError = document.getElementById('password-error');
             const loginError = document.getElementById('login-error');
-            
+
             // Reset error messages
             emailError.textContent = '';
             passwordError.textContent = '';
             loginError.textContent = '';
-            
+
             // Validate inputs
             let hasError = false;
             if (!email) {
                 emailError.textContent = 'Email is required';
                 hasError = true;
             }
-            
+
             if (!password) {
                 passwordError.textContent = 'Password is required';
                 hasError = true;
             }
-            
+
             if (hasError) return;
-            
+
             // Disable login button
             loginBtn.disabled = true;
             loginBtn.textContent = 'Logging in...';
-            
+
             fetch(`${API_URL}/auth/login`, {
                 method: 'POST',
                 headers: {
@@ -860,29 +867,29 @@
                 },
                 body: JSON.stringify({ email, password })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.message && !data.token) {
-                    loginError.textContent = data.message;
-                } else if (data.token) {
-                    localStorage.setItem('token', data.token);
-                    token = data.token;
-                    currentUser = data;
-                    showChatInterface();
-                    initializeSocket();
-                    loadConversations();
-                }
-            })
-            .catch(error => {
-                console.error('Login error:', error);
-                loginError.textContent = 'An error occurred during login';
-            })
-            .finally(() => {
-                loginBtn.disabled = false;
-                loginBtn.textContent = 'Login';
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message && !data.token) {
+                        loginError.textContent = data.message;
+                    } else if (data.token) {
+                        localStorage.setItem('token', data.token);
+                        token = data.token;
+                        currentUser = data;
+                        showChatInterface();
+                        initializeSocket();
+                        loadConversations();
+                    }
+                })
+                .catch(error => {
+                    console.error('Login error:', error);
+                    loginError.textContent = 'An error occurred during login';
+                })
+                .finally(() => {
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = 'Login';
+                });
         }
-        
+
         function register() {
             const username = document.getElementById('reg-username').value;
             const email = document.getElementById('reg-email').value;
@@ -891,25 +898,25 @@
             const emailError = document.getElementById('reg-email-error');
             const passwordError = document.getElementById('reg-password-error');
             const registerError = document.getElementById('register-error');
-            
+
             // Reset error messages
             usernameError.textContent = '';
             emailError.textContent = '';
             passwordError.textContent = '';
             registerError.textContent = '';
-            
+
             // Validate inputs
             let hasError = false;
             if (!username) {
                 usernameError.textContent = 'Username is required';
                 hasError = true;
             }
-            
+
             if (!email) {
                 emailError.textContent = 'Email is required';
                 hasError = true;
             }
-            
+
             if (!password) {
                 passwordError.textContent = 'Password is required';
                 hasError = true;
@@ -917,13 +924,13 @@
                 passwordError.textContent = 'Password must be at least 6 characters';
                 hasError = true;
             }
-            
+
             if (hasError) return;
-            
+
             // Disable register button
             registerBtn.disabled = true;
             registerBtn.textContent = 'Registering...';
-            
+
             fetch(`${API_URL}/auth/register`, {
                 method: 'POST',
                 headers: {
@@ -931,681 +938,787 @@
                 },
                 body: JSON.stringify({ username, email, password })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.message && !data.token) {
-                    registerError.textContent = data.message;
-                } else if (data.token) {
-                    localStorage.setItem('token', data.token);
-                    token = data.token;
-                    currentUser = data;
-                    showChatInterface();
-                    initializeSocket();
-                    loadConversations();
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message && !data.token) {
+                        registerError.textContent = data.message;
+                    } else if (data.token) {
+                        localStorage.setItem('token', data.token);
+                        token = data.token;
+                        currentUser = data;
+                        showChatInterface();
+                        initializeSocket();
+                        loadConversations();
+                    }
+                })
+                .catch(error => {
+                    console.error('Register error:', error);
+                    registerError.textContent = 'An error occurred during registration';
+                })
+                .finally(() => {
+                    registerBtn.disabled = false;
+                    registerBtn.textContent = 'Register';
+                });
+        }
+
+        function logout() {
+            fetch(`${API_URL}/auth/logout`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
                 }
             })
-            .catch(error => {
-                console.error('Register error:', error);
-                registerError.textContent = 'An error occurred during registration';
-            })
-            .finally(() => {
-                registerBtn.disabled = false;
-                registerBtn.textContent = 'Register';
+                .then(() => {
+                    // Clean up regardless of server response
+                    localStorage.removeItem('token');
+                    token = null;
+                    currentUser = null;
+
+                    if (socket) {
+                        socket.disconnect();
+                        socket = null;
+                    }
+                    // Clear temporary message storage
+                    temporaryMessages = {};
+                    conversationList = [];
+
+                    // Reset UI
+                    showLoginInterface();
+                })
+                .catch(error => {
+                    console.error('Logout error:', error);
+                    // Still clean up even if there's an error
+                    localStorage.removeItem('token');
+                    token = null;
+                    currentUser = null;
+                    temporaryMessages = {};
+                    conversationList = [];
+                    showLoginInterface();
+                });
+        }
+
+        function showLoginInterface() {
+            loginContainer.style.display = 'block';
+            registerContainer.style.display = 'none';
+            chatContainer.style.display = 'none';
+            userControls.style.display = 'none';
+        }
+
+        function showChatInterface() {
+            loginContainer.style.display = 'none';
+            registerContainer.style.display = 'none';
+            chatContainer.style.display = 'flex';
+            userControls.style.display = 'flex';
+
+            // Show user info
+            userInfo.textContent = `${currentUser.username}`;
+        }
+
+        function initializeSocket() {
+            // Clean up any existing socket connection
+            if (socket) {
+                socket.disconnect();
+            }
+
+            // Create new socket connection with auth token
+            socket = io('http://localhost:4400', {
+                query: { token },
+                transports: ['websocket'],
+                reconnection: true,
+                reconnectionAttempts: 5,
+                reconnectionDelay: 1000
+            });
+
+            // Connection events
+            socket.on('connect', () => {
+                console.log('Socket connected with ID:', socket.id);
+                socketConnected = true;
+                updateConnectionStatus('connected');
+
+                // Process any queued messages
+                processMessageQueue();
+
+                // Send user ID to server
+                if (currentUser && currentUser._id) {
+                    console.log('Emitting user_connected event with ID:', currentUser._id);
+                    socket.emit('user_connected', currentUser._id);
+                }
+            });
+
+            socket.on('connect_error', (error) => {
+                console.error('Socket connection error:', error);
+                socketConnected = false;
+                updateConnectionStatus('disconnected');
+            });
+
+            // Keep the connection alive
+            setInterval(() => {
+                if (socket && socketConnected) {
+                    socket.emit('ping');
+                }
+            }, 30000);
+
+            socket.on('pong', () => {
+                console.log('Received pong from server');
+            });
+
+            // Message events - store in temporary memory
+            socket.on('new_message', (data) => {
+                console.log('Received new_message event:', data);
+
+                // Store in temporary memory
+                storeTemporaryMessage(data.sender, currentUser._id, data);
+
+                // If message is from currently selected user, add it to the chat
+                if (data.sender === selectedUserId) {
+                    addMessageToChat(data, false);
+
+                    // Mark as read
+                    socket.emit('message_read', {
+                        messageId: data._id,
+                        senderId: data.sender
+                    });
+                }
+
+                // Update conversations list
+                updateConversationList();
+            });
+
+            socket.on('message_delivered', (data) => {
+                console.log('Message delivered:', data);
+                updateMessageStatus(data.messageId, 'delivered');
+
+                // Also update in temporary storage
+                updateMessageStatusInStorage(data.messageId, 'delivered');
+            });
+
+            socket.on('message_status_update', (data) => {
+                console.log('Message status update:', data);
+                updateMessageStatus(data.messageId, data.status);
+
+                // Also update in temporary storage
+                updateMessageStatusInStorage(data.messageId, data.status);
+            });
+
+            socket.on('user_status', (data) => {
+                console.log('User status update:', data);
+                updateUserStatus(data.userId, data.status);
+            });
+
+            socket.on('user_typing', (data) => {
+                console.log('User typing:', data);
+                if (data.senderId === selectedUserId) {
+                    showTypingIndicator(selectedUsername);
+                }
+            });
+
+            socket.on('disconnect', () => {
+                console.log('Socket disconnected');
+                socketConnected = false;
+                updateConnectionStatus('disconnected');
+
+                // Try to reconnect
+                setTimeout(() => {
+                    if (!socketConnected) {
+                        console.log('Attempting to reconnect...');
+                        socket.connect();
+                    }
+                }, 5000);
             });
         }
-        
-        function logout() {
-    fetch(`${API_URL}/auth/logout`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    })
-    .then(() => {
-        // Clean up regardless of server response
-        localStorage.removeItem('token');
-        token = null;
-        currentUser = null;
-        
-        if (socket) {
-            socket.disconnect();
-            socket = null;
-        }
-        
-        // Reset UI
-        showLoginInterface();
-    })
-    .catch(error => {
-        console.error('Logout error:', error);
-        // Still clean up even if there's an error
-        localStorage.removeItem('token');
-        token = null;
-        currentUser = null;
-        showLoginInterface();
-    });
-}
 
-function showLoginInterface() {
-    loginContainer.style.display = 'block';
-    registerContainer.style.display = 'none';
-    chatContainer.style.display = 'none';
-    userControls.style.display = 'none';
-}
+        // Store a message in temporary memory
+        function storeTemporaryMessage(senderId, receiverId, messageData) {
+            // Create a unique conversation ID (smaller ID first for consistency)
+            const conversationId = [senderId, receiverId].sort().join('-');
 
-function showChatInterface() {
-    loginContainer.style.display = 'none';
-    registerContainer.style.display = 'none';
-    chatContainer.style.display = 'flex';
-    userControls.style.display = 'flex';
-    
-    // Show user info
-    userInfo.textContent = `${currentUser.username}`;
-}
+            if (!temporaryMessages[conversationId]) {
+                temporaryMessages[conversationId] = [];
+            }
 
-
-function initializeSocket() {
-    // Clean up any existing socket connection
-    if (socket) {
-        socket.disconnect();
-    }
-    
-    // Create new socket connection with auth token
-    socket = io('http://localhost:4400', {
-        query: { token },
-        transports: ['websocket', 'polling']
-    });
-    
-    // Connection events
-    socket.on('connect', () => {
-        console.log('Socket connected with ID:', socket.id);
-        socketConnected = true;
-        updateConnectionStatus('connected');
-        
-        // Send user ID to server
-        console.log('Emitting user_connected event with ID:', currentUser._id);
-        socket.emit('user_connected', currentUser._id);
-    });
-    
-    socket.on('connect_error', (error) => {
-        console.error('Socket connection error:', error);
-        socketConnected = false;
-        updateConnectionStatus('disconnected');
-    });
-    
-    // Message events
-    socket.on('new_message', (data) => {
-        console.log('Received new_message event:', data);
-        
-        // If message is from currently selected user, add it to the chat
-        if (data.sender === selectedUserId) {
-            addMessageToChat(data, false);
-            
-            // Mark as read
-            socket.emit('message_read', {
-                messageId: data._id,
-                senderId: data.sender
+            // Add message to conversation
+            temporaryMessages[conversationId].push({
+                _id: messageData._id || `temp-${Date.now()}`,
+                sender: senderId,
+                receiver: receiverId,
+                content: messageData.content,
+                contentType: messageData.contentType || 'text',
+                status: messageData.status || 'sent',
+                createdAt: messageData.createdAt || new Date().toISOString()
             });
-        } else {
-            // If from someone else, just update conversations list
-            loadConversations();
-        }
-    });
-    
-    socket.on('message_delivered', (data) => {
-        console.log('Message delivered:', data);
-        updateMessageStatus(data.messageId, 'delivered');
-    });
-    
-    socket.on('message_status_update', (data) => {
-        console.log('Message status update:', data);
-        updateMessageStatus(data.messageId, data.status);
-    });
-    
-    socket.on('user_status', (data) => {
-        console.log('User status update:', data);
-        updateUserStatus(data.userId, data.status);
-    });
-    
-    socket.on('user_typing', (data) => {
-        console.log('User typing:', data);
-        if (data.senderId === selectedUserId) {
-            showTypingIndicator(selectedUsername);
-        }
-    });
-    
-    socket.on('disconnect', () => {
-        console.log('Socket disconnected');
-        socketConnected = false;
-        updateConnectionStatus('disconnected');
-    });
-}
 
-function sendMessage() {
-    const content = messageInput.value.trim();
-    
-    if (!content || !selectedUserId) {
-        return;
-    }
-    
-    // Clear input and reset height
-    messageInput.value = '';
-    messageInput.style.height = 'auto';
-    sendBtn.disabled = true;
-    
-    // Add message to UI immediately
-    const tempId = 'temp-' + Date.now();
-    addMessageToChat({
-        _id: tempId,
-        content: content,
-        createdAt: new Date(),
-        status: 'sending'
-    }, true);
-    
-    // Send to server
-    fetch(`${API_URL}/messages/send`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            receiverId: selectedUserId,
-            content: content,
-            contentType: 'text'
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Message sent via API:', data);
-        
-        // Update temp message with real ID
-        updateMessageElement(tempId, data._id, 'sent');
-        
-        // Send via socket for real-time delivery
-        if (socket && socket.connected) {
-            const socketData = {
-                receiverId: selectedUserId,
-                senderId: currentUser._id,
-                message: content,
-                messageId: data._id
+            // Limit to last 100 messages per conversation to prevent memory issues
+            if (temporaryMessages[conversationId].length > 100) {
+                temporaryMessages[conversationId] = temporaryMessages[conversationId].slice(-100);
+            }
+
+            console.log(`Stored message in conversation ${conversationId}. Total: ${temporaryMessages[conversationId].length}`);
+        }
+
+        // Update message status in temporary storage
+        function updateMessageStatusInStorage(messageId, status) {
+            // Look through all conversations
+            Object.keys(temporaryMessages).forEach(conversationId => {
+                const messages = temporaryMessages[conversationId];
+
+                // Find the message and update its status
+                const messageIndex = messages.findIndex(msg => msg._id === messageId);
+                if (messageIndex !== -1) {
+                    messages[messageIndex].status = status;
+                    console.log(`Updated message ${messageId} status to ${status} in storage`);
+                }
+            });
+        }
+
+        // Update the conversation list based on temporary messages
+        function updateConversationList() {
+            // Get all unique users from conversations
+            const users = new Set();
+            Object.keys(temporaryMessages).forEach(conversationId => {
+                const [user1, user2] = conversationId.split('-');
+                users.add(user1);
+                users.add(user2);
+            });
+
+            // Remove current user from the set
+            if (currentUser && currentUser._id) {
+                users.delete(currentUser._id);
+            }
+
+            // Build conversation list
+            const newConversationList = [];
+
+            users.forEach(userId => {
+                // Find conversation with this user
+                const conversationId = [userId, currentUser._id].sort().join('-');
+                const messages = temporaryMessages[conversationId] || [];
+
+                // Skip if no messages
+                if (messages.length === 0) return;
+
+                // Get last message
+                const lastMessage = messages[messages.length - 1];
+
+                // Find user details (this would normally come from a user list)
+                // This is a simplification - you would need to have user details from your contacts list
+                const user = getConversationUser(userId);
+
+                if (user) {
+                    newConversationList.push({
+                        _id: userId,
+                        username: user.username || 'Unknown User',
+                        status: user.status || 'offline',
+                        lastMessage: lastMessage,
+                        unreadCount: getUnreadCount(userId)
+                    });
+                }
+            });
+
+            // Sort by last message time (newest first)
+            newConversationList.sort((a, b) => {
+                const timeA = new Date(a.lastMessage?.createdAt || 0);
+                const timeB = new Date(b.lastMessage?.createdAt || 0);
+                return timeB - timeA;
+            });
+
+            // Update global variable
+            conversationList = newConversationList;
+
+            // Update UI
+            renderConversations(conversationList);
+        }
+
+        // Get user details from contacts/users list (simplified)
+        function getConversationUser(userId) {
+            // Check in global users list first
+            const userFromList = users.find(u => u._id === userId);
+            if (userFromList) return userFromList;
+
+            // Fallback: check if we have any message from this user to get a name
+            const conversationId = [userId, currentUser._id].sort().join('-');
+            const messages = temporaryMessages[conversationId] || [];
+
+            // If we have messages, use the user ID as username as fallback
+            if (messages.length > 0) {
+                return {
+                    _id: userId,
+                    username: `User ${userId.substring(0, 5)}...`,
+                    status: 'unknown'
+                };
+            }
+
+            return null;
+        }
+
+        // Get unread count for a specific user
+        function getUnreadCount(userId) {
+            const conversationId = [userId, currentUser._id].sort().join('-');
+            const messages = temporaryMessages[conversationId] || [];
+
+            // Count messages from the other user that are not read
+            return messages.filter(msg =>
+                msg.sender === userId &&
+                msg.status !== 'read'
+            ).length;
+        }
+
+        // Modified sendMessage function that doesn't save to database
+        function sendMessage() {
+            const content = messageInput.value.trim();
+
+            if (!content || !selectedUserId) {
+                return;
+            }
+
+            // Disable send button to prevent double-clicks
+            sendBtn.disabled = true;
+
+            // Clear input and reset height
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+
+            // Generate message ID
+            const messageId = `msg-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+            // Create message object
+            const messageData = {
+                _id: messageId,
+                sender: currentUser._id,
+                receiver: selectedUserId,
+                content: content,
+                contentType: 'text',
+                status: 'sending',
+                createdAt: new Date().toISOString()
             };
-            
-            console.log('Emitting send_message event:', socketData);
-            socket.emit('send_message', socketData);
-        } else {
-            console.warn('Socket not connected, real-time delivery not available');
+
+            // Add message to UI immediately
+            addMessageToChat(messageData, true);
+
+            // Store in temporary memory
+            storeTemporaryMessage(currentUser._id, selectedUserId, messageData);
+
+            // Send via socket for real-time delivery
+            if (socket && socketConnected) {
+                const socketData = {
+                    receiverId: selectedUserId,
+                    message: content,
+                    messageId: messageId,
+                    senderId: currentUser._id
+                };
+
+                console.log('Emitting send_message event:', socketData);
+                socket.emit('send_message', socketData);
+            } else {
+                console.log('Socket not connected, queuing message for later delivery');
+                // If socket is not connected, queue the message for later
+                messageQueue.push({
+                    receiverId: selectedUserId,
+                    message: content,
+                    messageId: messageId,
+                    senderId: currentUser._id
+                });
+
+                // Update status to reflect it's waiting to be sent
+                updateMessageStatus(messageId, 'pending');
+                updateMessageStatusInStorage(messageId, 'pending');
+            }
+
+            // Update conversations list to show latest message
+            updateConversationList();
+
+            // Re-enable send button
+            sendBtn.disabled = false;
         }
-    })
-    .catch(error => {
-        console.error('Error sending message:', error);
-        // Update UI to show error
-        const messageElem = document.getElementById(tempId);
-        if (messageElem) {
-            messageElem.classList.add('message-error');
-        }
-    })
-    .finally(() => {
-        // Re-enable send button
-        sendBtn.disabled = false;
-    });
-}
 
+        // Process any queued messages
+        function processMessageQueue() {
+            if (!socket || !socketConnected || messageQueue.length === 0) return;
 
+            console.log(`Processing ${messageQueue.length} queued messages`);
 
-function loadConversations() {
-    // Reset search and switch to conversations mode
-    isSearchMode = false;
-    searchInput.value = '';
-    sidebarTitle.textContent = 'Conversations';
-    
-    fetch(`${API_URL}/messages/conversations`, {
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        conversations = data;
-        renderConversations(conversations);
-    })
-    .catch(error => {
-        console.error('Error loading conversations:', error);
-    });
-}
-
-function loadUsers() {
-    fetch(`${API_URL}/users/search`, {
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        // Filter out current user
-        users = data.filter(user => user._id !== currentUser._id);
-        renderUsers(users);
-    })
-    .catch(error => {
-        console.error('Error loading users:', error);
-    });
-}
-
-function switchToSearchMode() {
-    isSearchMode = true;
-    searchInput.value = '';
-    sidebarTitle.textContent = 'New Conversation';
-    loadUsers();
-}
-
-function switchToConversationsMode() {
-    isSearchMode = false;
-    searchInput.value = '';
-    sidebarTitle.textContent = 'Conversations';
-    loadConversations();
-}
-
-function renderConversations(conversations) {
-    usersList.innerHTML = '';
-    
-    if (conversations.length === 0) {
-        const emptyItem = document.createElement('div');
-        emptyItem.className = 'user-item';
-        emptyItem.innerHTML = `
-            <div class="user-details">
-                <div class="user-name">No conversations yet</div>
-                <div class="user-last-message">Start a new chat by clicking + button</div>
-            </div>
-        `;
-        usersList.appendChild(emptyItem);
-        return;
-    }
-    
-    conversations.forEach(conv => {
-        const userItem = document.createElement('div');
-        userItem.className = `user-item ${selectedUserId === conv._id ? 'active' : ''}`;
-        userItem.dataset.userId = conv._id;
-        
-        const initial = conv.username ? conv.username.charAt(0).toUpperCase() : '?';
-        const unreadBadge = conv.unreadCount > 0 ? `<span class="unread-badge">${conv.unreadCount}</span>` : '';
-        const lastMessage = conv.lastMessage ? conv.lastMessage.content : 'No messages yet';
-        const lastMessageTime = conv.lastMessage ? formatMessageTime(new Date(conv.lastMessage.createdAt)) : '';
-        const statusClass = conv.status === 'online' ? 'status-online' : 'status-offline';
-        
-        userItem.innerHTML = `
-            <div class="user-avatar">${initial}</div>
-            <div class="user-details">
-                <div class="user-name">
-                    ${conv.username} ${unreadBadge}
-                </div>
-                <div class="user-last-message">${lastMessage}</div>
-            </div>
-            <div class="user-meta">
-                <div class="message-time">${lastMessageTime}</div>
-                <div class="status-indicator ${statusClass}"></div>
-            </div>
-        `;
-        
-        userItem.addEventListener('click', () => {
-            selectUser(conv._id, conv.username, conv.status || 'offline');
-        });
-        
-        usersList.appendChild(userItem);
-    });
-}
-
-function renderUsers(users) {
-    usersList.innerHTML = '';
-    
-    // Add back button
-    const backButton = document.createElement('div');
-    backButton.className = 'back-button';
-    backButton.innerHTML = `
-        <span class="back-icon">←</span>
-        <span>Back to conversations</span>
-    `;
-    backButton.addEventListener('click', switchToConversationsMode);
-    usersList.appendChild(backButton);
-    
-    if (users.length === 0) {
-        const emptyItem = document.createElement('div');
-        emptyItem.className = 'user-item';
-        emptyItem.innerHTML = `
-            <div class="user-details">
-                <div class="user-name">No users found</div>
-            </div>
-        `;
-        usersList.appendChild(emptyItem);
-        return;
-    }
-    
-    users.forEach(user => {
-        const userItem = document.createElement('div');
-        userItem.className = 'user-item';
-        userItem.dataset.userId = user._id;
-        
-        const initial = user.username ? user.username.charAt(0).toUpperCase() : '?';
-        const statusClass = user.status === 'online' ? 'status-online' : 'status-offline';
-        
-        userItem.innerHTML = `
-            <div class="user-avatar">${initial}</div>
-            <div class="user-details">
-                <div class="user-name">${user.username}</div>
-                <div class="user-last-message">${user.email || ''}</div>
-            </div>
-            <div class="status-indicator ${statusClass}"></div>
-        `;
-        
-        userItem.addEventListener('click', () => {
-            selectUser(user._id, user.username, user.status || 'offline');
-        });
-        
-        usersList.appendChild(userItem);
-    });
-}
-
-function selectUser(userId, username, status) {
-    // Update selected user
-    selectedUserId = userId;
-    selectedUsername = username;
-    
-    // Update chat header
-    chatName.textContent = username;
-    chatAvatar.textContent = username.charAt(0).toUpperCase();
-    statusText.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-    statusIndicator.className = `status-indicator status-${status}`;
-    
-    // Show active chat
-    emptyChat.style.display = 'none';
-    activeChat.style.display = 'flex';
-    
-    // Enable message input
-    messageInput.disabled = false;
-    sendBtn.disabled = messageInput.value.trim() === '';
-    
-    // Load messages
-    loadMessages(userId);
-    
-    // Highlight selected user in the list
-    document.querySelectorAll('.user-item').forEach(item => {
-        if (item.dataset.userId === userId) {
-            item.classList.add('active');
-        } else {
-            item.classList.remove('active');
-        }
-    });
-    
-    // If in search mode, switch back to conversations
-    if (isSearchMode) {
-        switchToConversationsMode();
-    }
-}
-
-function loadMessages(userId) {
-    // Clear messages container
-    messagesContainer.innerHTML = '';
-    
-    fetch(`${API_URL}/messages/user/${userId}`, {
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.messages && data.messages.length > 0) {
-            renderMessages(data.messages);
-        } else {
-            // Show empty state if no messages
-            const emptyState = document.createElement('div');
-            emptyState.className = 'empty-state';
-            emptyState.innerHTML = `
-                <div class="empty-state-text">No messages yet</div>
-                <div class="empty-state-subtext">Start the conversation!</div>
-            `;
-            messagesContainer.appendChild(emptyState);
-        }
-    })
-    .catch(error => {
-        console.error('Error loading messages:', error);
-    });
-}
-
-function renderMessages(messages) {
-    // Sort messages by date (oldest first)
-    const sortedMessages = [...messages].sort((a, b) => 
-        new Date(a.createdAt) - new Date(b.createdAt)
-    );
-    
-    // Group messages by date
-    const messagesByDate = {};
-    sortedMessages.forEach(message => {
-        const date = new Date(message.createdAt).toLocaleDateString();
-        if (!messagesByDate[date]) {
-            messagesByDate[date] = [];
-        }
-        messagesByDate[date].push(message);
-    });
-    
-    // Clear messages container
-    messagesContainer.innerHTML = '';
-    
-    // Render messages by date groups
-    Object.keys(messagesByDate).forEach(date => {
-        // Add date divider
-        const divider = document.createElement('div');
-        divider.className = 'message-date-divider';
-        divider.innerHTML = `<span class="message-date">${formatDate(new Date(date))}</span>`;
-        messagesContainer.appendChild(divider);
-        
-        // Add messages for this date
-        messagesByDate[date].forEach(message => {
-            const isSent = message.sender === currentUser._id || message.sender._id === currentUser._id;
-            addMessageToChat(message, isSent, false);
-        });
-    });
-    
-    // Scroll to bottom
-    scrollToBottom();
-}
-
-function addMessageToChat(message, isSent, shouldScroll = true) {
-    const messageElement = document.createElement('div');
-    messageElement.className = `message ${isSent ? 'message-sent' : 'message-received'}`;
-    messageElement.id = message._id || `temp-${Date.now()}`;
-    
-    // Format the time
-    const time = message.createdAt ? formatMessageTime(new Date(message.createdAt)) : formatMessageTime(new Date());
-    
-    // Message status (only for sent messages)
-    let statusHTML = '';
-    if (isSent) {
-        const status = message.status || 'sending';
-        statusHTML = `<span class="message-status">${status.charAt(0).toUpperCase() + status.slice(1)}</span>`;
-    }
-    
-    messageElement.innerHTML = `
-        <div class="message-content">${message.content}</div>
-        <div class="message-info">
-            ${statusHTML}
-            <span class="message-time">${time}</span>
-        </div>
-    `;
-    
-    messagesContainer.appendChild(messageElement);
-    
-    // Scroll to bottom if needed
-    if (shouldScroll) {
-        scrollToBottom();
-    }
-}
-
-function sendMessage() {
-    const content = messageInput.value.trim();
-    
-    if (!content || !selectedUserId) {
-        return;
-    }
-    
-    // Disable send button to prevent double-clicks
-    sendBtn.disabled = true;
-    
-    // Clear input and reset height
-    messageInput.value = '';
-    messageInput.style.height = 'auto';
-    
-    // Generate temporary ID for this message
-    const tempId = `temp-${Date.now()}`;
-    
-    // Add message to UI immediately with "sending" status
-    addMessageToChat({
-        _id: tempId,
-        content: content,
-        status: 'sending'
-    }, true);
-    
-    // Send to server
-    fetch(`${API_URL}/messages/send`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            receiverId: selectedUserId,
-            content: content,
-            contentType: 'text'
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Message sent:', data);
-        
-        // Update the temporary message with real ID and status
-        updateMessageElement(tempId, data._id, 'sent');
-        
-        // Notify through socket
-        if (socket && socketConnected) {
-            socket.emit('send_message', {
-                receiverId: selectedUserId,
-                message: content,
-                messageId: data._id
-            });
-        } else {
-            // If socket is not connected, queue the message for later
-            messageQueue.push({
-                receiverId: selectedUserId,
-                message: content,
-                messageId: data._id
-            });
-        }
-    })
-    .catch(error => {
-        console.error('Error sending message:', error);
-        // Update UI to show error
-        const messageElem = document.getElementById(tempId);
-        if (messageElem) {
-            messageElem.classList.add('message-error');
-            const statusElem = messageElem.querySelector('.message-status');
-            if (statusElem) {
-                statusElem.textContent = 'Failed';
+            // Process all queued messages
+            while (messageQueue.length > 0) {
+                const message = messageQueue.shift();
+                console.log('Sending queued message:', message);
+                socket.emit('send_message', message);
             }
         }
-    })
-    .finally(() => {
-        // Re-enable send button
-        sendBtn.disabled = false;
-    });
-}
 
-function updateMessageElement(oldId, newId, status) {
-    const messageElem = document.getElementById(oldId);
-    if (messageElem) {
-        messageElem.id = newId;
-        const statusElem = messageElem.querySelector('.message-status');
-        if (statusElem) {
-            statusElem.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+        // Modified loadMessages function to use temporary storage
+        function loadMessages(userId) {
+            // Clear messages container
+            messagesContainer.innerHTML = '';
+
+            // Get conversation ID
+            const conversationId = [userId, currentUser._id].sort().join('-');
+            const messages = temporaryMessages[conversationId] || [];
+
+            if (messages.length > 0) {
+                renderMessages(messages);
+
+                // Mark all as read
+                messages.forEach(msg => {
+                    if (msg.sender === userId && msg.status !== 'read') {
+                        // Update status in UI
+                        updateMessageStatus(msg._id, 'read');
+
+                        // Update in memory
+                        updateMessageStatusInStorage(msg._id, 'read');
+
+                        // Notify sender via socket
+                        if (socket && socketConnected) {
+                            socket.emit('message_read', {
+                                messageId: msg._id,
+                                senderId: userId
+                            });
+                        }
+                    }
+                });
+            } else {
+                // Show empty state if no messages
+                const emptyState = document.createElement('div');
+                emptyState.className = 'empty-state';
+                emptyState.innerHTML = `
+                    <div class="empty-state-text">No messages yet</div>
+                    <div class="empty-state-subtext">Start the conversation!</div>
+                `;
+                messagesContainer.appendChild(emptyState);
+            }
+
+            // Update unread count in conversation list
+            updateConversationList();
         }
-    }
-}
 
-function updateMessageStatus(messageId, status) {
-    const messageElem = document.getElementById(messageId);
-    if (messageElem) {
-        const statusElem = messageElem.querySelector('.message-status');
-        if (statusElem) {
-            statusElem.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+        // Modified loadConversations function to use temporary storage
+        function loadConversations() {
+            // Reset search and switch to conversations mode
+            isSearchMode = false;
+            searchInput.value = '';
+            sidebarTitle.textContent = 'Conversations';
+
+            // Just update from in-memory storage
+            updateConversationList();
         }
-    }
-}
 
-function updateUserStatus(userId, status) {
-    // Update in conversations list
-    const userItem = document.querySelector(`.user-item[data-user-id="${userId}"]`);
-    if (userItem) {
-        const statusIndicator = userItem.querySelector('.status-indicator');
-        if (statusIndicator) {
+        function loadUsers() {
+            fetch(`${API_URL}/users/search`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // Filter out current user
+                    users = data.filter(user => user._id !== currentUser._id);
+                    renderUsers(users);
+                })
+                .catch(error => {
+                    console.error('Error loading users:', error);
+                });
+        }
+
+        function switchToSearchMode() {
+            isSearchMode = true;
+            searchInput.value = '';
+            sidebarTitle.textContent = 'New Conversation';
+            loadUsers();
+        }
+
+        function switchToConversationsMode() {
+            isSearchMode = false;
+            searchInput.value = '';
+            sidebarTitle.textContent = 'Conversations';
+            updateConversationList();
+        }
+
+        function renderConversations(conversations) {
+            usersList.innerHTML = '';
+
+            if (conversations.length === 0) {
+                const emptyItem = document.createElement('div');
+                emptyItem.className = 'user-item';
+                emptyItem.innerHTML = `
+                    <div class="user-details">
+                        <div class="user-name">No conversations yet</div>
+                        <div class="user-last-message">Start a new chat by clicking + button</div>
+                    </div>
+                `;
+                usersList.appendChild(emptyItem);
+                return;
+            }
+
+            conversations.forEach(conv => {
+                const userItem = document.createElement('div');
+                userItem.className = `user-item ${selectedUserId === conv._id ? 'active' : ''}`;
+                userItem.dataset.userId = conv._id;
+
+                const initial = conv.username ? conv.username.charAt(0).toUpperCase() : '?';
+                const unreadBadge = conv.unreadCount > 0 ? `<span class="unread-badge">${conv.unreadCount}</span>` : '';
+                const lastMessage = conv.lastMessage ? conv.lastMessage.content : 'No messages yet';
+                const lastMessageTime = conv.lastMessage ? formatMessageTime(new Date(conv.lastMessage.createdAt)) : '';
+                const statusClass = conv.status === 'online' ? 'status-online' : 'status-offline';
+
+                userItem.innerHTML = `
+                    <div class="user-avatar">${initial}</div>
+                    <div class="user-details">
+                        <div class="user-name">
+                            ${conv.username} ${unreadBadge}
+                        </div>
+                        <div class="user-last-message">${lastMessage}</div>
+                    </div>
+                    <div class="user-meta">
+                        <div class="message-time">${lastMessageTime}</div>
+                        <div class="status-indicator ${statusClass}"></div>
+                    </div>
+                `;
+
+                userItem.addEventListener('click', () => {
+                    selectUser(conv._id, conv.username, conv.status || 'offline');
+                });
+
+                usersList.appendChild(userItem);
+            });
+        }
+
+        function renderUsers(users) {
+            usersList.innerHTML = '';
+
+            // Add back button
+            const backButton = document.createElement('div');
+            backButton.className = 'back-button';
+            backButton.innerHTML = `
+                <span class="back-icon">←</span>
+                <span>Back to conversations</span>
+            `;
+            backButton.addEventListener('click', switchToConversationsMode);
+            usersList.appendChild(backButton);
+
+            if (users.length === 0) {
+                const emptyItem = document.createElement('div');
+                emptyItem.className = 'user-item';
+                emptyItem.innerHTML = `
+                    <div class="user-details">
+                        <div class="user-name">No users found</div>
+                    </div>
+                `;
+                usersList.appendChild(emptyItem);
+                return;
+            }
+
+            users.forEach(user => {
+                const userItem = document.createElement('div');
+                userItem.className = 'user-item';
+                userItem.dataset.userId = user._id;
+
+                const initial = user.username ? user.username.charAt(0).toUpperCase() : '?';
+                const statusClass = user.status === 'online' ? 'status-online' : 'status-offline';
+
+                userItem.innerHTML = `
+                    <div class="user-avatar">${initial}</div>
+                    <div class="user-details">
+                        <div class="user-name">${user.username}</div>
+                        <div class="user-last-message">${user.email || ''}</div>
+                    </div>
+                    <div class="status-indicator ${statusClass}"></div>
+                `;
+
+                userItem.addEventListener('click', () => {
+                    selectUser(user._id, user.username, user.status || 'offline');
+                });
+
+                usersList.appendChild(userItem);
+            });
+        }
+
+        function selectUser(userId, username, status) {
+            // Update selected user
+            selectedUserId = userId;
+            selectedUsername = username;
+
+            // Update chat header
+            chatName.textContent = username;
+            chatAvatar.textContent = username.charAt(0).toUpperCase();
+            statusText.textContent = status.charAt(0).toUpperCase() + status.slice(1);
             statusIndicator.className = `status-indicator status-${status}`;
+
+            // Show active chat
+            emptyChat.style.display = 'none';
+            activeChat.style.display = 'flex';
+
+            // Enable message input
+            messageInput.disabled = false;
+            sendBtn.disabled = messageInput.value.trim() === '';
+
+            // Load messages
+            loadMessages(userId);
+
+            // Highlight selected user in the list
+            document.querySelectorAll('.user-item').forEach(item => {
+                if (item.dataset.userId === userId) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+
+            // If in search mode, switch back to conversations
+            if (isSearchMode) {
+                switchToConversationsMode();
+            }
         }
-    }
-    
-    // Update in chat header if it's the selected user
-    if (userId === selectedUserId) {
-        statusText.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-        statusIndicator.className = `status-indicator status-${status}`;
-    }
-}
 
-function showTypingIndicator(username) {
-    if (!typingIndicator) return;
-    
-    typingIndicator.textContent = `${username} is typing...`;
-    typingIndicator.style.display = 'block';
-    
-    // Hide after 3 seconds
-    clearTimeout(typingTimeout);
-    typingTimeout = setTimeout(() => {
-        typingIndicator.style.display = 'none';
-    }, 3000);
-}
+        function renderMessages(messages) {
+            // Sort messages by date (oldest first)
+            const sortedMessages = [...messages].sort((a, b) =>
+                new Date(a.createdAt) - new Date(b.createdAt)
+            );
 
-function processMessageQueue() {
-    if (!socket || !socketConnected || messageQueue.length === 0) return;
-    
-    // Process all queued messages
-    while (messageQueue.length > 0) {
-        const message = messageQueue.shift();
-        socket.emit('send_message', message);
-    }
-}
+            // Group messages by date
+            const messagesByDate = {};
+            sortedMessages.forEach(message => {
+                const date = new Date(message.createdAt).toLocaleDateString();
+                if (!messagesByDate[date]) {
+                    messagesByDate[date] = [];
+                }
+                messagesByDate[date].push(message);
+            });
 
-function scrollToBottom() {
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-}
+            // Clear messages container
+            messagesContainer.innerHTML = '';
 
-// Helper functions for formatting dates and times
-function formatDate(date) {
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    if (date.toDateString() === today.toDateString()) {
-        return 'Today';
-    } else if (date.toDateString() === yesterday.toDateString()) {
-        return 'Yesterday';
-    } else {
-        return date.toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric',
-            year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
-        });
-    }
-}
+            // Render messages by date groups
+            Object.keys(messagesByDate).forEach(date => {
+                // Add date divider
+                const divider = document.createElement('div');
+                divider.className = 'message-date-divider';
+                divider.innerHTML = `<span class="message-date">${formatDate(new Date(date))}</span>`;
+                messagesContainer.appendChild(divider);
 
-function formatMessageTime(date) {
-    return date.toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: true 
-    });
-}
+                // Add messages for this date
+                messagesByDate[date].forEach(message => {
+                    const isSent = message.sender === currentUser._id;
+                    addMessageToChat(message, isSent, false);
+                });
+            });
+
+            // Scroll to bottom
+            scrollToBottom();
+        }
+
+        function addMessageToChat(message, isSent, shouldScroll = true) {
+            const messageElement = document.createElement('div');
+            messageElement.className = `message ${isSent ? 'message-sent' : 'message-received'}`;
+            messageElement.id = message._id || `temp-${Date.now()}`;
+
+            // Format the time
+            const time = message.createdAt ? formatMessageTime(new Date(message.createdAt)) : formatMessageTime(new Date());
+
+            // Message status (only for sent messages)
+            let statusHTML = '';
+            if (isSent) {
+                const status = message.status || 'sending';
+                statusHTML = `<span class="message-status">${status.charAt(0).toUpperCase() + status.slice(1)}</span>`;
+            }
+
+            messageElement.innerHTML = `
+                <div class="message-content">${message.content}</div>
+                <div class="message-info">
+                    ${statusHTML}
+                    <span class="message-time">${time}</span>
+                </div>
+            `;
+
+            messagesContainer.appendChild(messageElement);
+
+            // Scroll to bottom if needed
+            if (shouldScroll) {
+                scrollToBottom();
+            }
+        }
+
+        function updateMessageStatus(messageId, status) {
+            const messageElem = document.getElementById(messageId);
+            if (messageElem) {
+                const statusElem = messageElem.querySelector('.message-status');
+                if (statusElem) {
+                    statusElem.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+                }
+            }
+        }
+
+        function updateUserStatus(userId, status) {
+            // Update in conversations list
+            const userItem = document.querySelector(`.user-item[data-user-id="${userId}"]`);
+            if (userItem) {
+                const statusIndicator = userItem.querySelector('.status-indicator');
+                if (statusIndicator) {
+                    statusIndicator.className = `status-indicator status-${status}`;
+                }
+            }
+
+            // Update in chat header if it's the selected user
+            if (userId === selectedUserId) {
+                statusText.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+                statusIndicator.className = `status-indicator status-${status}`;
+            }
+        }
+
+        function updateConnectionStatus(status) {
+            if (!connectionStatus) return;
+
+            if (status === 'connected') {
+                connectionStatus.innerText = 'Connected';
+                connectionStatus.className = 'connection-status connected';
+            } else {
+                connectionStatus.innerText = 'Disconnected';
+                connectionStatus.className = 'connection-status disconnected';
+            }
+        }
+
+        function showTypingIndicator(username) {
+            if (!typingIndicator) return;
+
+            typingIndicator.textContent = `${username} is typing...`;
+            typingIndicator.style.display = 'block';
+
+            // Hide after 3 seconds
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                typingIndicator.style.display = 'none';
+            }, 3000);
+        }
+
+        function scrollToBottom() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Helper functions for formatting dates and times
+        function formatDate(date) {
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            if (date.toDateString() === today.toDateString()) {
+                return 'Today';
+            } else if (date.toDateString() === yesterday.toDateString()) {
+                return 'Yesterday';
+            } else {
+                return date.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
+                });
+            }
+        }
+
+        function formatMessageTime(date) {
+            return date.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+        }
     </script>
-  
+</body>
+
+</html>
