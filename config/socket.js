@@ -14,7 +14,7 @@ module.exports = (io) => {
   
       console.log('Connected users:', Array.from(onlineUsers.entries()));
   
-    }, 30000);
+    }, 1000);
    
     io.on('connection', (socket) => {
   
