@@ -4,9 +4,9 @@ const {
   sendDirectMessage,
   getMessagesByUser,
   getRecentConversations,
-  deleteMessage,
-  getUnreadCount,
-  searchMessages
+  updateMessageStatus,
+  markAllMessagesAsRead,
+  getUnreadCount
 } = require('../controllers/messageController');
 const auth = require('../middleware/auth');
 
@@ -18,9 +18,9 @@ router.post('/send', sendDirectMessage);
 router.get('/user/:userId', getMessagesByUser);
 router.get('/conversations', getRecentConversations);
 
-// Message management
-router.delete('/:messageId', deleteMessage);
+// Message status management
+router.put('/:messageId/status', updateMessageStatus);
+router.put('/read-all/:userId', markAllMessagesAsRead);
 router.get('/unread', getUnreadCount);
-router.get('/search', searchMessages);
 
 module.exports = router;

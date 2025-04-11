@@ -534,6 +534,54 @@
             margin-right: 10px;
             font-size: 1.2rem;
         }
+
+
+         /* WebRTC Call Styles */
+         .call-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .call-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .call-btn:hover {
+            background-color: #45a049;
+        }
+        
+        .call-btn.end-call {
+            background-color: #F44336;
+        }
+        
+        .call-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        #local-video, #remote-video {
+            width: 300px;
+            height: 200px;
+            background-color: #000;
+            margin: 10px;
+            border-radius: 8px;
+        }
+        
+        .video-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
         
         /* Responsive adjustments */
         @media (max-width: 768px) {
@@ -667,11 +715,23 @@
                             <button id="send-btn" class="send-btn" disabled>➤</button>
                         </div>
                     </div>
+                    <div id="call-section" class="call-controls" style="display: none;">
+                        <button id="audio-call-btn" class="call-btn">Audio Call</button>
+                        <button id="video-call-btn" class="call-btn">Video Call</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
+    <div id="call-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 1000;">
+        <div class="video-container">
+            <video id="local-video" autoplay muted></video>
+            <video id="remote-video" autoplay></video>
+        </div>
+        <div class="call-controls">
+            <button id="end-call-btn" class="call-btn end-call">End Call</button>
+        </div>
+    </div>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script>
         // API Configuration
@@ -686,7 +746,25 @@
         let typingTimeout = null;
         let isSearchMode = false;
         let messageQueue = [];
-        let socketConnected = false;
+        let socketConnected = false; // WebRTC Call Configuration
+        let localStream = null;
+        let remoteStream = null;
+        let peerConnection = null;
+        let callType = null;
+
+        // WebRTC Configuration
+        const webrtcConfig = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                // Add your TURN servers here if needed
+                // {
+                //     urls: 'turn:your-turn-server.com',
+                //     username: 'username',
+                //     credential: 'password'
+                // }
+            ]
+        };
         
         // DOM Elements
         const loginContainer = document.getElementById('login-container');
@@ -715,6 +793,208 @@
         const connectionStatus = document.getElementById('connection-status');
         const typingIndicator = document.getElementById('typing-indicator');
         const sidebarTitle = document.getElementById('sidebar-title');
+        const audioCallBtn = document.getElementById('audio-call-btn');
+        const videoCallBtn = document.getElementById('video-call-btn');
+        const endCallBtn = document.getElementById('end-call-btn');
+        const callSection = document.getElementById('call-section');
+        const callModal = document.getElementById('call-modal');
+        const localVideo = document.getElementById('local-video');
+        const remoteVideo = document.getElementById('remote-video');
+
+        // WebRTC Call Functionality
+        async function setupLocalStream(videoRequired = false) {
+            try {
+                const constraints = {
+                    audio: true,
+                    video: videoRequired
+                };
+                
+                localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                localVideo.srcObject = localStream;
+                
+                if (!videoRequired) {
+                    localVideo.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error accessing media devices:', error);
+                alert('Could not access media devices. Please check your permissions.');
+            }
+        }
+
+        function createPeerConnection() {
+            // Create new RTCPeerConnection
+            peerConnection = new RTCPeerConnection(webrtcConfig);
+
+            // Add local stream tracks to peer connection
+            localStream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStream);
+            });
+
+            // Handle remote stream
+            peerConnection.ontrack = (event) => {
+                remoteStream = event.streams[0];
+                remoteVideo.srcObject = remoteStream;
+            };
+
+            // Handle ICE candidate generation
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    // Send ICE candidate to the other user via socket
+                    socket.emit('webrtc_ice_candidate', {
+                        candidate: event.candidate,
+                        receiverId: selectedUserId
+                    });
+                }
+            };
+        }
+
+        async function initiateCall(type) {
+            callType = type;
+            
+            // Show call modal
+            callModal.style.display = 'block';
+            
+            // Setup local stream
+            await setupLocalStream(type === 'video');
+            
+            // Create peer connection
+            createPeerConnection();
+            
+            // Create offer
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+            
+            // Send offer to the other user
+            socket.emit('webrtc_offer', {
+                offer,
+                receiverId: selectedUserId,
+                callType: type
+            });
+        }
+
+        async function handleOffer(offer, senderId) {
+            // Create peer connection
+            createPeerConnection();
+            
+            // Set remote description
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+            
+            // Create answer
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+            
+            // Send answer back
+            socket.emit('webrtc_answer', {
+                answer,
+                receiverId: senderId
+            });
+        }
+
+        function endCall() {
+            // Stop all tracks
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+            }
+            
+            if (remoteStream) {
+                remoteStream.getTracks().forEach(track => track.stop());
+            }
+            
+            // Close peer connection
+            if (peerConnection) {
+                peerConnection.close();
+            }
+            
+            // Reset variables
+            localStream = null;
+            remoteStream = null;
+            peerConnection = null;
+            
+            // Hide call modal
+            callModal.style.display = 'none';
+            
+            // Notify other user about call end
+            socket.emit('webrtc_end_call', {
+                receiverId: selectedUserId
+            });
+        }
+
+        // Socket Event Listeners for WebRTC
+        function setupWebRTCSocketListeners() {
+            // WebRTC call offer received
+            socket.on('webrtc_offer', async (data) => {
+                // Confirm call with user
+                const acceptCall = confirm(`Incoming ${data.callType} call from ${selectedUsername}. Accept?`);
+                
+                if (acceptCall) {
+                    callType = data.callType;
+                    callModal.style.display = 'block';
+                    
+                    // Setup local stream
+                    await setupLocalStream(data.callType === 'video');
+                    
+                    // Handle offer
+                    await handleOffer(data.offer, data.senderId);
+                }
+            });
+            
+            // WebRTC answer received
+            socket.on('webrtc_answer', async (data) => {
+                // Set remote description
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+            });
+            
+            // ICE candidate received
+            socket.on('webrtc_ice_candidate', async (data) => {
+                if (data.candidate) {
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+                }
+            });
+            
+            // Call ended
+            socket.on('webrtc_end_call', () => {
+                endCall();
+            });
+        }
+
+        // Initialize WebRTC event listeners when socket is established
+        function initializeWebRTCCalls() {
+            // Show call section when a user is selected
+            if (selectedUserId) {
+                callSection.style.display = 'flex';
+            }
+            
+            // Audio Call Button
+            audioCallBtn.addEventListener('click', () => initiateCall('audio'));
+            
+            // Video Call Button
+            videoCallBtn.addEventListener('click', () => initiateCall('video'));
+            
+            // End Call Button
+            endCallBtn.addEventListener('click', endCall);
+        }
+
+        // Modify existing code to integrate WebRTC initialization
+        function selectUser(userId, username, status) {
+            // Original selectUser logic
+            const originalSelectUser = selectUser;
+            originalSelectUser(userId, username, status);
+            
+            // Show call section
+            callSection.style.display = 'flex';
+            
+            // If this is the first time setting up WebRTC for this socket
+            if (socket && !socket.webrtcInitialized) {
+                setupWebRTCSocketListeners();
+                initializeWebRTCCalls();
+                socket.webrtcInitialized = true;
+            }
+        }
+
+        // Additional error handling for WebRTC
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Unhandled promise rejection:', event.reason);
+        });
         
         // Check if user is already logged in
         if (token) {
@@ -1002,7 +1282,6 @@ function showChatInterface() {
     userInfo.textContent = `${currentUser.username}`;
 }
 
-
 function initializeSocket() {
     // Clean up any existing socket connection
     if (socket) {
@@ -1024,6 +1303,14 @@ function initializeSocket() {
         // Send user ID to server
         console.log('Emitting user_connected event with ID:', currentUser._id);
         socket.emit('user_connected', currentUser._id);
+        
+        // Process any queued messages
+        processMessageQueue();
+        
+        // Reload messages if a conversation is selected
+        if (selectedUserId) {
+            loadMessages(selectedUserId);
+        }
     });
     
     socket.on('connect_error', (error) => {
@@ -1032,13 +1319,28 @@ function initializeSocket() {
         updateConnectionStatus('disconnected');
     });
     
+    // Listen for conversation history response
+    socket.on('conversation_history', (data) => {
+        console.log('Received conversation history:', data);
+        if (data.userId === selectedUserId) {
+            if (data.messages && data.messages.length > 0) {
+                renderMessages(data.messages);
+            }
+        }
+    });
+    
     // Message events
     socket.on('new_message', (data) => {
         console.log('Received new_message event:', data);
         
         // If message is from currently selected user, add it to the chat
         if (data.sender === selectedUserId) {
-            addMessageToChat(data, false);
+            addMessageToChat({
+                _id: data._id,
+                content: data.content,
+                createdAt: data.createdAt,
+                status: data.status
+            }, false);
             
             // Mark as read
             socket.emit('message_read', {
@@ -1046,14 +1348,19 @@ function initializeSocket() {
                 senderId: data.sender
             });
         } else {
-            // If from someone else, just update conversations list
-            loadConversations();
+            // Show notification for new message
+            showNotification(data.sender);
         }
     });
     
     socket.on('message_delivered', (data) => {
         console.log('Message delivered:', data);
         updateMessageStatus(data.messageId, 'delivered');
+    });
+    
+    socket.on('message_pending', (data) => {
+        console.log('Message pending delivery:', data);
+        updateMessageStatus(data.messageId, 'pending');
     });
     
     socket.on('message_status_update', (data) => {
@@ -1080,6 +1387,83 @@ function initializeSocket() {
     });
 }
 
+// Add function to show notification for new messages
+function showNotification(senderId) {
+    // Update the UI to show a new message indicator
+    const userItems = document.querySelectorAll('.user-item');
+    for (let item of userItems) {
+        if (item.dataset.userId === senderId) {
+            // Check if there's already an unread badge
+            let unreadBadge = item.querySelector('.unread-badge');
+            if (unreadBadge) {
+                // Increment the count
+                const currentCount = parseInt(unreadBadge.textContent);
+                unreadBadge.textContent = currentCount + 1;
+            } else {
+                // Create a new badge
+                const nameElement = item.querySelector('.user-name');
+                if (nameElement) {
+                    const badge = document.createElement('span');
+                    badge.className = 'unread-badge';
+                    badge.textContent = '1';
+                    nameElement.appendChild(badge);
+                }
+            }
+            break;
+        }
+    }
+    
+    // Play notification sound if available
+    const notificationSound = document.getElementById('notification-sound');
+    if (notificationSound) {
+        notificationSound.play().catch(e => console.log('Could not play notification sound'));
+    }
+}
+
+// Add this to the HTML if you want notification sounds
+// <audio id="notification-sound" src="path/to/notification-sound.mp3" preload="auto"></audio>
+
+// Function to load conversations without API calls (uses mock data until connected)
+function loadConversations() {
+    // Placeholder for conversations when not connected
+    if (!socket || !socketConnected) {
+        // Show placeholder UI until connected
+        renderConversations([]);
+        return;
+    }
+    
+    // If you still need conversations list, you might need to implement
+    // a socket event for this or use a simplified approach to just show
+    // users the current user has interacted with in this session
+    
+    // For now, you could use userSearch to get all users
+    fetch(`${API_URL}/users/search`, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const usersList = data.filter(user => user._id !== currentUser._id);
+        // Convert to conversation format
+        const mockConversations = usersList.map(user => ({
+            _id: user._id,
+            username: user.username,
+            profilePicture: user.profilePicture,
+            status: user.status || 'offline',
+            lastSeen: user.lastSeen
+        }));
+        renderConversations(mockConversations);
+    })
+    .catch(error => {
+        console.error('Error loading users for conversations:', error);
+        renderConversations([]);
+    });
+}
+
+
+
+
 function sendMessage() {
     const content = messageInput.value.trim();
     
@@ -1092,8 +1476,10 @@ function sendMessage() {
     messageInput.style.height = 'auto';
     sendBtn.disabled = true;
     
-    // Add message to UI immediately
-    const tempId = 'temp-' + Date.now();
+    // Generate temporary ID for this message
+    const tempId = `temp-${Date.now()}`;
+    
+    // Add message to UI immediately with "sending" status
     addMessageToChat({
         _id: tempId,
         content: content,
@@ -1101,55 +1487,83 @@ function sendMessage() {
         status: 'sending'
     }, true);
     
-    // Send to server
-    fetch(`${API_URL}/messages/send`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
+    // Send only through socket instead of API
+    if (socket && socketConnected) {
+        const messageData = {
             receiverId: selectedUserId,
-            content: content,
-            contentType: 'text'
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Message sent via API:', data);
+            message: content,
+            messageId: tempId
+        };
         
-        // Update temp message with real ID
-        updateMessageElement(tempId, data._id, 'sent');
+        console.log('Emitting send_message event:', messageData);
+        socket.emit('send_message', messageData);
         
-        // Send via socket for real-time delivery
-        if (socket && socket.connected) {
-            const socketData = {
-                receiverId: selectedUserId,
-                senderId: currentUser._id,
-                message: content,
-                messageId: data._id
-            };
-            
-            console.log('Emitting send_message event:', socketData);
-            socket.emit('send_message', socketData);
-        } else {
-            console.warn('Socket not connected, real-time delivery not available');
-        }
-    })
-    .catch(error => {
-        console.error('Error sending message:', error);
-        // Update UI to show error
-        const messageElem = document.getElementById(tempId);
-        if (messageElem) {
-            messageElem.classList.add('message-error');
-        }
-    })
-    .finally(() => {
-        // Re-enable send button
-        sendBtn.disabled = false;
-    });
+        // Update status to sent after a short delay
+        setTimeout(() => {
+            updateMessageStatus(tempId, 'sent');
+        }, 200);
+    } else {
+        console.warn('Socket not connected, queueing message for later');
+        // Queue message for later
+        messageQueue.push({
+            receiverId: selectedUserId,
+            message: content,
+            messageId: tempId
+        });
+        
+        updateMessageStatus(tempId, 'pending');
+    }
+    
+    // Re-enable send button
+    sendBtn.disabled = false;
 }
 
+function updateConnectionStatus(status) {
+    if (!connectionStatus) return;
+    
+    connectionStatus.className = `connection-status ${status}`;
+    
+    if (status === 'connected') {
+        connectionStatus.textContent = 'Connected';
+    } else if (status === 'disconnected') {
+        connectionStatus.textContent = 'Disconnected';
+    } else {
+        connectionStatus.textContent = 'Connecting...';
+    }
+}
+
+// Show typing indicator
+function showTypingIndicator(username) {
+    if (!typingIndicator) return;
+    
+    typingIndicator.textContent = `${username} is typing...`;
+    typingIndicator.style.display = 'block';
+    
+    // Hide after 3 seconds
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {
+        typingIndicator.style.display = 'none';
+    }, 3000);
+}
+
+// Update message status in UI
+function updateMessageStatus(messageId, status) {
+    const messageElem = document.getElementById(messageId);
+    if (messageElem) {
+        const statusElem = messageElem.querySelector('.message-status');
+        if (statusElem) {
+            // Capitalize first letter of status
+            const displayStatus = status.charAt(0).toUpperCase() + status.slice(1);
+            statusElem.textContent = displayStatus;
+            
+            // Add appropriate styling
+            messageElem.classList.remove('message-error');
+            if (status === 'error' || status === 'failed') {
+                messageElem.classList.add('message-error');
+            }
+        }
+    }
+}
 
 
 function loadConversations() {
@@ -1339,35 +1753,46 @@ function selectUser(userId, username, status) {
         switchToConversationsMode();
     }
 }
-
 function loadMessages(userId) {
     // Clear messages container
     messagesContainer.innerHTML = '';
     
-    fetch(`${API_URL}/messages/user/${userId}`, {
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.messages && data.messages.length > 0) {
-            renderMessages(data.messages);
-        } else {
-            // Show empty state if no messages
-            const emptyState = document.createElement('div');
-            emptyState.className = 'empty-state';
-            emptyState.innerHTML = `
-                <div class="empty-state-text">No messages yet</div>
-                <div class="empty-state-subtext">Start the conversation!</div>
-            `;
-            messagesContainer.appendChild(emptyState);
-        }
-    })
-    .catch(error => {
-        console.error('Error loading messages:', error);
-    });
+    if (socket && socketConnected) {
+        // Request conversation history from socket
+        socket.emit('get_conversation', {
+            userId: currentUser._id,
+            otherUserId: userId
+        });
+        
+        // Listen for response (should be set up in socket initialization)
+        socket.once('conversation_history', (data) => {
+            if (data.userId === userId) {
+                if (data.messages && data.messages.length > 0) {
+                    renderMessages(data.messages);
+                } else {
+                    // Show empty state if no messages
+                    const emptyState = document.createElement('div');
+                    emptyState.className = 'empty-state';
+                    emptyState.innerHTML = `
+                        <div class="empty-state-text">No messages yet</div>
+                        <div class="empty-state-subtext">Start the conversation!</div>
+                    `;
+                    messagesContainer.appendChild(emptyState);
+                }
+            }
+        });
+    } else {
+        // Show empty state if socket is not connected
+        const emptyState = document.createElement('div');
+        emptyState.className = 'empty-state';
+        emptyState.innerHTML = `
+            <div class="empty-state-text">Cannot load messages</div>
+            <div class="empty-state-subtext">Waiting for connection...</div>
+        `;
+        messagesContainer.appendChild(emptyState);
+    }
 }
+
 
 function renderMessages(messages) {
     // Sort messages by date (oldest first)
@@ -1527,15 +1952,7 @@ function updateMessageElement(oldId, newId, status) {
     }
 }
 
-function updateMessageStatus(messageId, status) {
-    const messageElem = document.getElementById(messageId);
-    if (messageElem) {
-        const statusElem = messageElem.querySelector('.message-status');
-        if (statusElem) {
-            statusElem.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-        }
-    }
-}
+
 
 function updateUserStatus(userId, status) {
     // Update in conversations list
@@ -1570,10 +1987,15 @@ function showTypingIndicator(username) {
 function processMessageQueue() {
     if (!socket || !socketConnected || messageQueue.length === 0) return;
     
+    console.log(`Processing ${messageQueue.length} queued messages`);
+    
     // Process all queued messages
     while (messageQueue.length > 0) {
         const message = messageQueue.shift();
         socket.emit('send_message', message);
+        
+        // Update message status to "sent"
+        updateMessageStatus(message.messageId, 'sent');
     }
 }
 

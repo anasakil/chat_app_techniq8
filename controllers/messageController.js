@@ -1,15 +1,13 @@
 // controllers/messageController.js
-const Message = require('../models/Message');
 const User = require('../models/User');
 const mongoose = require('mongoose');
-const { encryptMessage, decryptMessage } = require('../utils/encryption');
 
-// @desc    Send a message directly to user
+// @desc    Send a message directly to user (socket only, no DB storage)
 // @route   POST /api/messages/send
 // @access  Private
 const sendDirectMessage = async (req, res, next) => {
   try {
-    const { receiverId, content, contentType = 'text' } = req.body;
+    const { receiverId, content, contentType = 'text', tempId } = req.body;
     const senderId = req.user._id;
 
     // Basic validation
@@ -28,33 +26,45 @@ const sendDirectMessage = async (req, res, next) => {
       return res.status(403).json({ message: 'Cannot send message to this user' });
     }
 
-    // Create and encrypt message
-    const encryptedContent = encryptMessage(content, process.env.ENCRYPTION_KEY || 'default_encryption_key');
-    
-    const newMessage = new Message({
-      sender: senderId,
-      receiver: receiverId,
-      content: JSON.stringify(encryptedContent),
-      contentType,
-      encrypted: true
-    });
+    // Generate a real message ID (but don't actually store in DB)
+    const messageId = tempId || new mongoose.Types.ObjectId().toString();
 
-    // Save message
-    const savedMessage = await newMessage.save();
-
-    // Populate sender info for response
-    await savedMessage.populate('sender', 'username profilePicture');
-    await savedMessage.populate('receiver', 'username profilePicture');
-    
-    // For response, decrypt the message content
-    const decryptedMessage = {
-      ...savedMessage._doc,
-      content: content // Return original content for sender
+    // Create response with sender and receiver info
+    const messageResponse = {
+      _id: messageId,
+      sender: {
+        _id: req.user._id,
+        username: req.user.username,
+        profilePicture: req.user.profilePicture || '',
+        status: req.user.status || 'offline'
+      },
+      receiver: {
+        _id: receiver._id,
+        username: receiver.username,
+        profilePicture: receiver.profilePicture || '',
+        status: receiver.status || 'offline'
+      },
+      content: content,
+      contentType: contentType,
+      status: 'sent',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
 
-    res.status(201).json(decryptedMessage);
+    // If there was a tempId in the request, notify socket server about ID change
+    if (tempId && tempId !== messageId) {
+      // Emit socket event for ID change if needed
+      if (req.io) {
+        req.io.to(req.user._id.toString()).emit('message_id_assigned', {
+          tempId: tempId,
+          serverId: messageId
+        });
+      }
+    }
+
+    res.status(201).json(messageResponse);
   } catch (error) {
-    console.error('Error sending message:', error);
+    console.error('Error handling message:', error);
     next(error);
   }
 };
@@ -62,15 +72,10 @@ const sendDirectMessage = async (req, res, next) => {
 // @desc    Get messages between current user and another user
 // @route   GET /api/messages/user/:userId
 // @access  Private
+// This endpoint now only verifies the user exists but doesn't fetch messages
 const getMessagesByUser = async (req, res, next) => {
   try {
     const { userId } = req.params;
-    const { page = 1, limit = 20 } = req.query;
-    const currentUserId = req.user._id;
-
-    // Convert to integers
-    const pageNum = parseInt(page);
-    const limitNum = parseInt(limit);
 
     // Verify user exists
     const otherUser = await User.findById(userId);
@@ -78,71 +83,14 @@ const getMessagesByUser = async (req, res, next) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Get messages between the two users (in either direction)
-    const messages = await Message.find({
-      $or: [
-        { sender: currentUserId, receiver: userId },
-        { sender: userId, receiver: currentUserId }
-      ]
-    })
-      .sort({ createdAt: -1 })
-      .skip((pageNum - 1) * limitNum)
-      .limit(limitNum)
-      .populate('sender', 'username profilePicture')
-      .populate('receiver', 'username profilePicture');
-
-    // Mark messages as read
-    await Message.updateMany(
-      { 
-        sender: userId, 
-        receiver: currentUserId,
-        status: { $ne: 'read' }
-      },
-      { 
-        $set: { 
-          status: 'read',
-          readAt: Date.now() 
-        }
-      }
-    );
-
-    // Decrypt messages
-    const decryptedMessages = messages.map(message => {
-      try {
-        if (message.encrypted && message.content) {
-          const encryptedData = JSON.parse(message.content);
-          const decryptedContent = decryptMessage(encryptedData, process.env.ENCRYPTION_KEY || 'default_encryption_key');
-          
-          return {
-            ...message._doc,
-            content: decryptedContent
-          };
-        }
-        return message;
-      } catch (error) {
-        console.error('Error decrypting message:', error);
-        return {
-          ...message._doc,
-          content: 'Could not decrypt message'
-        };
-      }
-    });
-
-    // Get total count for pagination info
-    const totalMessages = await Message.countDocuments({
-      $or: [
-        { sender: currentUserId, receiver: userId },
-        { sender: userId, receiver: currentUserId }
-      ]
-    });
-
+    // Return empty messages array since messages are stored locally
     res.json({
-      messages: decryptedMessages,
+      messages: [],
       pagination: {
-        total: totalMessages,
-        page: pageNum,
-        limit: limitNum,
-        pages: Math.ceil(totalMessages / limitNum)
+        total: 0,
+        page: 1,
+        limit: 20,
+        pages: 0
       }
     });
   } catch (error) {
@@ -158,87 +106,33 @@ const getRecentConversations = async (req, res, next) => {
   try {
     const userId = req.user._id;
 
-    // Find all users the current user has exchanged messages with
-    const messagePartners = await Message.aggregate([
-      {
-        $match: {
-          $or: [
-            { sender: new mongoose.Types.ObjectId(userId) },
-            { receiver: new mongoose.Types.ObjectId(userId) }
+    // Get all contacts from the user's contacts list
+    const currentUser = await User.findById(userId).populate('contacts', 'username profilePicture status lastSeen');
+    
+    // If no contacts, return empty array
+    if (!currentUser || !currentUser.contacts || currentUser.contacts.length === 0) {
+      return res.json([]);
+    }
 
-          ]
-        }
-      },
-      {
-        $sort: { createdAt: -1 }
-      },
-      {
-        $group: {
-          _id: {
-            $cond: [
-              { $eq: ['$sender', new mongoose.Types.ObjectId(userId)] },
-              '$receiver',
-              '$sender'
-            ]
-          },
-          lastMessage: { $first: '$$ROOT' },
-          messageCount: { $sum: 1 },
-          unreadCount: {
-            $sum: {
-              $cond: [
-                { $and: [
-                    { $eq: ['$receiver', new mongoose.Types.ObjectId(userId)] },
-                    { $ne: ['$status', 'read'] }
-                  ]},
-                1,
-                0
-              ]
-            }
-          }
-        }
-      }
-    ]);
-
-    // Get user details for each conversation partner
-    const userIds = messagePartners.map(partner => partner._id);
-    const users = await User.find({ _id: { $in: userIds } })
-      .select('username profilePicture status lastSeen');
-
-    // Combine message data with user data
-    const conversations = messagePartners.map(partner => {
-      const user = users.find(u => u._id.toString() === partner._id.toString());
-      if (!user) return null;
-
-      const lastMessage = partner.lastMessage;
-      let content = lastMessage.content;
-
-      // Decrypt the last message if needed
-      if (lastMessage.encrypted && lastMessage.content) {
-        try {
-          const encryptedData = JSON.parse(lastMessage.content);
-          content = decryptMessage(encryptedData, process.env.ENCRYPTION_KEY || 'default_encryption_key');
-        } catch (err) {
-          content = 'Could not decrypt message';
-        }
-      }
-
+    // Map contacts to conversation format
+    const conversations = currentUser.contacts.map(contact => {
       return {
-        _id: user._id,
-        username: user.username,
-        profilePicture: user.profilePicture,
-        status: user.status,
-        lastSeen: user.lastSeen,
-        lastMessage: {
-          _id: lastMessage._id,
-          content: content,
-          contentType: lastMessage.contentType,
-          sender: lastMessage.sender,
-          createdAt: lastMessage.createdAt
-        },
-        unreadCount: partner.unreadCount,
-        messageCount: partner.messageCount
+        _id: contact._id,
+        username: contact.username,
+        profilePicture: contact.profilePicture || '',
+        status: contact.status || 'offline',
+        lastSeen: contact.lastSeen || new Date(),
+        // No actual message data since they're stored locally
+        lastMessage: null,
+        unreadCount: 0,
+        participants: [
+          { _id: userId },
+          { _id: contact._id }
+        ],
+        isGroup: false,
+        updatedAt: new Date().toISOString()
       };
-    }).filter(Boolean);
+    });
 
     res.json(conversations);
   } catch (error) {
@@ -247,138 +141,84 @@ const getRecentConversations = async (req, res, next) => {
   }
 };
 
-// @desc    Delete a message
-// @route   DELETE /api/messages/:messageId
+// @desc    Mark a message as delivered/read (only emits socket event)
+// @route   PUT /api/messages/:messageId/status
 // @access  Private
-const deleteMessage = async (req, res, next) => {
+const updateMessageStatus = async (req, res, next) => {
   try {
     const { messageId } = req.params;
-    const userId = req.user._id;
-
-    const message = await Message.findById(messageId);
-    if (!message) {
-      return res.status(404).json({ message: 'Message not found' });
+    const { status, senderId } = req.body;
+    
+    if (!['delivered', 'read'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status value' });
     }
-
-    // Check if user is the sender of the message
-    if (!message.sender.equals(userId)) {
-      return res.status(403).json({ message: 'Not authorized to delete this message' });
+    
+    // Emit socket event for status update
+    if (req.io && senderId) {
+      req.io.to(senderId).emit('message_status_update', {
+        messageId,
+        status,
+        userId: req.user._id
+      });
     }
-
-    // Perform soft delete by keeping the message but removing content
-    message.content = "This message was deleted";
-    message.contentType = "text";
-    message.fileUrl = null;
-    message.fileName = null;
-    message.fileSize = null;
-    message.encrypted = false;
-    await message.save();
-
-    res.json({ message: 'Message deleted successfully' });
+    
+    // No DB update, just return success
+    res.json({ 
+      message: 'Status updated',
+      messageId,
+      status
+    });
   } catch (error) {
-    console.error('Error deleting message:', error);
+    console.error('Error updating message status:', error);
     next(error);
   }
 };
 
-// @desc    Get unread message count
+// @desc    Mark all messages from a user as read
+// @route   PUT /api/messages/read-all/:userId
+// @access  Private
+const markAllMessagesAsRead = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    
+    // Verify user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Emit socket event for all messages read
+    if (req.io) {
+      req.io.to(userId).emit('all_messages_read', {
+        senderId: userId,
+        receiverId: req.user._id,
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    res.json({ message: 'All messages marked as read' });
+  } catch (error) {
+    console.error('Error marking all messages as read:', error);
+    next(error);
+  }
+};
+
+// @desc    Get unread message count (always returns 0 since counts managed locally)
 // @route   GET /api/messages/unread
 // @access  Private
 const getUnreadCount = async (req, res, next) => {
-  try {
-    const userId = req.user._id;
-
-    // Get total unread count
-    const totalUnread = await Message.countDocuments({
-      receiver: userId,
-      status: { $ne: 'read' }
-    });
-
-    // Get unread count by sender
-    const unreadBySender = await Message.aggregate([
-      {
-        $match: {
-          receiver: mongoose.Types.ObjectId(userId),
-          status: { $ne: 'read' }
-        }
-      },
-      {
-        $group: {
-          _id: '$sender',
-          count: { $sum: 1 }
-        }
-      }
-    ]);
-
-    // Convert to format that's easy to use on frontend
-    const unreadByUser = {};
-    unreadBySender.forEach(item => {
-      unreadByUser[item._id] = item.count;
-    });
-
-    res.json({
-      totalUnread,
-      unreadByUser
-    });
-  } catch (error) {
-    console.error('Error getting unread count:', error);
-    next(error);
-  }
-};
-
-// @desc    Search messages
-// @route   GET /api/messages/search
-// @access  Private
-const searchMessages = async (req, res, next) => {
-  try {
-    const { query, userId } = req.query;
-    const currentUserId = req.user._id;
-
-    if (!query) {
-      return res.status(400).json({ message: 'Search query is required' });
-    }
-
-    // Build base query
-    let messageQuery = {
-      $or: [
-        { sender: currentUserId },
-        { receiver: currentUserId }
-      ],
-      encrypted: false, // Only search non-encrypted messages
-      content: { $regex: query, $options: 'i' }
-    };
-
-    // If userId is provided, restrict search to messages between these users
-    if (userId) {
-      messageQuery = {
-        $or: [
-          { sender: currentUserId, receiver: userId },
-          { sender: userId, receiver: currentUserId }
-        ],
-        encrypted: false,
-        content: { $regex: query, $options: 'i' }
-      };
-    }
-
-    // Search for messages
-    const messages = await Message.find(messageQuery)
-      .sort({ createdAt: -1 })
-      .limit(50)
-      .populate('sender', 'username profilePicture')
-      .populate('receiver', 'username profilePicture');
-
-    res.json(messages);
-  } catch (error) {
-    console.error('Error searching messages:', error);
-    next(error);
-  }
+  // Return 0 unread since counts are handled locally
+  res.json({
+    totalUnread: 0,
+    unreadByUser: {}
+  });
 };
 
 module.exports = {
   sendDirectMessage,
   getMessagesByUser,
   getRecentConversations,
-  deleteMessage,
-  getUnreadCount,
-  searchMessages
+  updateMessageStatus,
+  markAllMessagesAsRead,
+  getUnreadCount
 };

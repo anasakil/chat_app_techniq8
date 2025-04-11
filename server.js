@@ -17,6 +17,7 @@ const userRoutes = require('./routes/userRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 const conversationRoutes = require('./routes/conversationRoutes');
 const fileRoutes = require('./routes/fileRoutes');
+const callRoutes = require('./routes/callRoutes');
  
 
  
@@ -59,6 +60,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/files', fileRoutes);
+app.use('/api/calls', callRoutes);
+
  
 // Error handling middleware
 app.use(errorHandler);
