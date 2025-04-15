@@ -1,5 +1,6 @@
 // config/socket.js
 const crypto = require('crypto');
+const messageQueue = require('../utils/messageQueue');
 
 // Enhanced encryption/decryption functions directly in socket.js
 const encryption = (text, secret) => {
@@ -116,7 +117,7 @@ module.exports = (io) => {
   setInterval(() => {
     console.log(`Active connections: ${onlineUsers.size}`);
     console.log('Connected users:', Array.from(onlineUsers.entries()));
-  }, 1000);
+  }, 30000);
   
   io.on('connection', (socket) => {
     console.log('New client connected:', socket.id);
@@ -135,7 +136,7 @@ module.exports = (io) => {
           onlineUsers.set(socket.userId, socket.id);
           io.emit('user_status', { userId: socket.userId, status: 'online' });
           
-          // Deliver any pending messages
+          // Deliver any pending messages from memory
           if (pendingMessages.has(socket.userId)) {
             const messages = pendingMessages.get(socket.userId);
             console.log(`Delivering ${messages.length} pending messages to user ${socket.userId}`);
@@ -144,6 +145,17 @@ module.exports = (io) => {
             });
             // Clear pending messages
             pendingMessages.delete(socket.userId);
+          }
+          
+          // Also check for persisted messages from file storage
+          const persistedMessages = messageQueue.getQueuedMessages(socket.userId);
+          if (persistedMessages && persistedMessages.length > 0) {
+            console.log(`Delivering ${persistedMessages.length} persisted messages to user ${socket.userId}`);
+            persistedMessages.forEach(msg => {
+              socket.emit('new_message', msg);
+            });
+            // Clear persisted message queue
+            messageQueue.clearMessageQueue(socket.userId);
           }
         }
       }
@@ -171,7 +183,7 @@ module.exports = (io) => {
         }
       }
       
-      // Deliver any pending messages
+      // Deliver any pending messages from memory
       if (pendingMessages.has(userId)) {
         const messages = pendingMessages.get(userId);
         console.log(`Delivering ${messages.length} pending messages to user ${userId}`);
@@ -180,6 +192,17 @@ module.exports = (io) => {
         });
         // Clear pending messages after delivery
         pendingMessages.delete(userId);
+      }
+      
+      // Also check for persisted messages from file storage
+      const persistedMessages = messageQueue.getQueuedMessages(userId);
+      if (persistedMessages && persistedMessages.length > 0) {
+        console.log(`Delivering ${persistedMessages.length} persisted messages to user ${userId}`);
+        persistedMessages.forEach(msg => {
+          socket.emit('new_message', msg);
+        });
+        // Clear persisted message queue
+        messageQueue.clearMessageQueue(userId);
       }
     });
     
@@ -244,11 +267,6 @@ module.exports = (io) => {
       } else {
         console.log(`Receiver ${receiverId} is offline, storing message for later delivery`);
         
-        // Store message for later delivery when user comes online
-        if (!pendingMessages.has(receiverId)) {
-          pendingMessages.set(receiverId, []);
-        }
-        
         // Store message for later delivery
         const storedMessage = {
           ...messageObj,
@@ -256,7 +274,15 @@ module.exports = (io) => {
           status: 'pending'
         };
         
+        // Store in memory for this session
+        if (!pendingMessages.has(receiverId)) {
+          pendingMessages.set(receiverId, []);
+        }
         pendingMessages.get(receiverId).push(storedMessage);
+        
+        // Also save to persistent storage (file) using messageQueue utility
+        messageQueue.addMessageToQueue(receiverId, storedMessage);
+        
         console.log(`Added message to pending queue for user ${receiverId}`);
         
         // Notify sender that message is pending
