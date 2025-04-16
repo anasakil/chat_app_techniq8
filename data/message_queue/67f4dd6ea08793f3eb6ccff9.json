@@ -1,0 +1,14 @@
+[
+  {
+    "_id": "temp_1744725712097",
+    "sender": "67efe93242a793edebea6df5",
+    "receiver": "67f4dd6ea08793f3eb6ccff9",
+    "content": "Hello! 👋",
+    "rawContent": "Hello! 👋",
+    "contentType": "text",
+    "createdAt": "2025-04-15T14:01:51.716Z",
+    "status": "pending",
+    "encrypted": true,
+    "queuedAt": "2025-04-15T14:01:51.717Z"
+  }
+]

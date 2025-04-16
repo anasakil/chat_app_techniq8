@@ -1,0 +1,26 @@
+[
+  {
+    "_id": "temp_1744725417522",
+    "sender": "67efe93242a793edebea6df5",
+    "receiver": "67efed7a4c13b53ce8c18469",
+    "content": "Hello! 👋",
+    "rawContent": "Hello! 👋",
+    "contentType": "text",
+    "createdAt": "2025-04-15T13:56:57.214Z",
+    "status": "pending",
+    "encrypted": true,
+    "queuedAt": "2025-04-15T13:56:57.215Z"
+  },
+  {
+    "_id": "temp_1744725440221",
+    "sender": "67efe93242a793edebea6df5",
+    "receiver": "67efed7a4c13b53ce8c18469",
+    "content": "99",
+    "rawContent": "99",
+    "contentType": "text",
+    "createdAt": "2025-04-15T13:57:19.843Z",
+    "status": "pending",
+    "encrypted": true,
+    "queuedAt": "2025-04-15T13:57:19.846Z"
+  }
+]
