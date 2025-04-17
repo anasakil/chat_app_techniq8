@@ -1,5 +1,9 @@
+// controllers/authController.js
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+
+// Get valid keys from environment variable
+const validKeys = process.env.REGISTRATION_KEYS.split(',');
 
 // Generate JWT token
 const generateToken = (id) => {
@@ -13,7 +17,33 @@ const generateToken = (id) => {
 // @access  Public
 const registerUser = async (req, res, next) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, key } = req.body;
+    
+    // Check if keys are configured
+    if (validKeys.length === 0) {
+      return res.status(500).json({ message: 'Registration keys not configured on server' });
+    }
+    
+    // Check if key is provided
+    if (!key) {
+      return res.status(400).json({ message: 'Registration key is required' });
+    }
+    
+    // Validate the key format
+    if (!/^\d{10}$/.test(key)) {
+      return res.status(400).json({ message: 'Invalid key format. Key must be exactly 10 digits.' });
+    }
+    
+    // Check if the key is in our predefined list
+    if (!validKeys.includes(key)) {
+      return res.status(400).json({ message: 'Invalid registration key' });
+    }
+    
+    // Check if the key has already been used
+    const keyExists = await User.findOne({ key });
+    if (keyExists) {
+      return res.status(400).json({ message: 'This registration key has already been used' });
+    }
     
     // Check if user already exists
     const userExists = await User.findOne({ $or: [{ email }, { username }] });
@@ -26,7 +56,8 @@ const registerUser = async (req, res, next) => {
     const user = await User.create({
       username,
       email,
-      password
+      password,
+      key
     });
     
     if (user) {
@@ -41,6 +72,7 @@ const registerUser = async (req, res, next) => {
       res.status(400).json({ message: 'Invalid user data' });
     }
   } catch (error) {
+    console.error('Registration error:', error);
     next(error);
   }
 };
@@ -154,10 +186,64 @@ const logoutUser = async (req, res, next) => {
   }
 };
 
+// @desc    Check if a key is valid
+// @route   POST /api/auth/check-key
+// @access  Public
+const checkKeyValidity = async (req, res, next) => {
+  try {
+    // Check if keys are configured
+    if (validKeys.length === 0) {
+      return res.status(500).json({ message: 'Registration keys not configured on server' });
+    }
+    
+    const { key } = req.body;
+    
+    if (!key) {
+      return res.status(400).json({ message: 'Key is required' });
+    }
+    
+    // Check format
+    if (!/^\d{10}$/.test(key)) {
+      return res.status(200).json({ 
+        valid: false,
+        message: 'Invalid key format. Key must be exactly 10 digits.'
+      });
+    }
+    
+    // Check if in valid keys list
+    if (!validKeys.includes(key)) {
+      return res.status(200).json({ 
+        valid: false,
+        message: 'This key is not valid'
+      });
+    }
+    
+    // Check if already used
+    const keyUsed = await User.findOne({ key });
+    
+    if (keyUsed) {
+      return res.status(200).json({ 
+        valid: false,
+        message: 'This key has already been used for registration'
+      });
+    }
+    
+    // Key is valid and unused
+    res.status(200).json({
+      valid: true,
+      message: 'Key is valid and available for registration'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Make sure to properly export all functions
 module.exports = {
   registerUser,
   loginUser,
   getUserProfile,
   updateUserProfile,
-  logoutUser
+  logoutUser,
+  checkKeyValidity
 };

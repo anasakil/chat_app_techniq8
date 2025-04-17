@@ -22,6 +22,18 @@ const UserSchema = new mongoose.Schema({
     required: true,
     minlength: 6
   },
+  key: {
+    type: String,
+    required: true,
+    unique: true, // Each key can only be used once
+    validate: {
+      validator: function(v) {
+        // Validate the key is exactly 10 digits
+        return /^\d{10}$/.test(v);
+      },
+      message: props => `${props.value} is not a valid key! Key must be exactly 10 digits.`
+    }
+  },
   profilePicture: {
     type: String,
     default: 'default-avatar.png'

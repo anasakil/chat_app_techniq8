@@ -15,6 +15,7 @@ const messageRoutes = require('./routes/messageRoutes');
 const conversationRoutes = require('./routes/conversationRoutes');
 const fileRoutes = require('./routes/fileRoutes');
 const callRoutes = require('./routes/callRoutes');
+const keyStatusRoutes = require('./routes/keyStatusRoutes'); // Added key status routes
  
 // Initialize Express
 const app = express();
@@ -63,6 +64,7 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/calls', callRoutes);
+app.use('/api/keys', keyStatusRoutes); // Added key status routes
 
 // Default route
 app.get('/', (req, res) => {
