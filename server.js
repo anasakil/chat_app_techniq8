@@ -6,9 +6,6 @@ const socketIO = require('socket.io');
 const dotenv = require('dotenv');
 const errorHandler = require('./middleware/errorHandler');
 
-
-
-
 dotenv.config();
  
 // Routes
@@ -18,8 +15,6 @@ const messageRoutes = require('./routes/messageRoutes');
 const conversationRoutes = require('./routes/conversationRoutes');
 const fileRoutes = require('./routes/fileRoutes');
 const callRoutes = require('./routes/callRoutes');
- 
-
  
 // Initialize Express
 const app = express();
@@ -51,8 +46,15 @@ mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
  
-// Socket.io setup
-require('./config/socket')(io);
+// Socket.io and WebRTC setup
+const socketHandler = require('./config/socket')(io);
+
+// Middleware to make socket available in routes
+app.use((req, res, next) => {
+  req.io = io;
+  req.onlineUsers = socketHandler.onlineUsers;
+  next();
+});
  
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -62,12 +64,16 @@ app.use('/api/conversations', conversationRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/calls', callRoutes);
 
+// Default route
+app.get('/', (req, res) => {
+  res.send('API is running...');
+});
  
 // Error handling middleware
 app.use(errorHandler);
  
 // Start server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 4400;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

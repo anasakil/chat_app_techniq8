@@ -1,6 +1,7 @@
 // config/socket.js
 const crypto = require('crypto');
 const messageQueue = require('../utils/messageQueue');
+const webrtcConfig = require('./webrtc');
 
 // Enhanced encryption/decryption functions directly in socket.js
 const encryption = (text, secret) => {
@@ -112,6 +113,9 @@ module.exports = (io) => {
   // Generate a simple secret key (should be moved to environment variables in production)
   const ENCRYPTION_SECRET = process.env.SOCKET_ENCRYPTION_SECRET || generateSecureKey();
   console.log('Using encryption secret for this session');
+  
+  // Initialize the WebRTC module with our socket.io instance and online users map
+  const webRTCConfig = webrtcConfig(io, onlineUsers);
   
   // Debug: Log active connections every 30 seconds
   setInterval(() => {
@@ -419,4 +423,7 @@ module.exports = (io) => {
       }
     }
   }
+  
+  // Return the online users map so it can be used elsewhere
+  return { onlineUsers, webRTCConfig };
 };

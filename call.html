@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC Call Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        .left-panel {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .right-panel {
+            flex: 2;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .users-list {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .user-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .user-item:hover {
+            background-color: #f5f5f5;
+        }
+        .user-item.selected {
+            background-color: #e3f2fd;
+        }
+        .user-item .status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .user-item .status.online {
+            background-color: #4CAF50;
+        }
+        .user-item .status.offline {
+            background-color: #9E9E9E;
+        }
+        .call-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-audio {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .btn-video {
+            background-color: #2196F3;
+            color: white;
+        }
+        .btn-end {
+            background-color: #F44336;
+            color: white;
+        }
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .video-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .video-box {
+            flex: 1;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        .video-box video {
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+        }
+        .video-box .label {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .connection-status {
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            text-align: center;
+        }
+        .status-connecting {
+            background-color: #FFF9C4;
+        }
+        .status-connected {
+            background-color: #E8F5E9;
+        }
+        .status-disconnected {
+            background-color: #FFEBEE;
+        }
+        .call-log {
+            height: 150px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 13px;
+            margin-top: 15px;
+        }
+        .login-container {
+            max-width: 300px;
+            margin: 100px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .login-btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .incoming-call {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: none;
+        }
+        .incoming-call-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Form -->
+    <div id="login-container" class="login-container">
+        <h2>Login to Test WebRTC</h2>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" placeholder="Enter your email">
+        </div>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" placeholder="Enter your password">
+        </div>
+        <button id="login-btn" class="login-btn">Login</button>
+    </div>
+
+    <!-- Main Application -->
+    <div id="app-container" style="display: none;">
+        <h1>WebRTC Call Test</h1>
+        <div class="connection-status" id="connection-status">Connecting to server...</div>
+        
+        <div class="container">
+            <div class="left-panel">
+                <h2>Online Users</h2>
+                <div class="users-list" id="users-list">
+                    <!-- Users will be added here dynamically -->
+                </div>
+                <div class="call-controls">
+                    <button id="audio-call-btn" class="btn btn-audio" disabled>Audio Call</button>
+                    <button id="video-call-btn" class="btn btn-video" disabled>Video Call</button>
+                </div>
+            </div>
+            
+            <div class="right-panel">
+                <h2>Call</h2>
+                <div class="video-container">
+                    <div class="video-box">
+                        <video id="local-video" autoplay muted playsinline></video>
+                        <div class="label">You</div>
+                    </div>
+                    <div class="video-box">
+                        <video id="remote-video" autoplay playsinline></video>
+                        <div class="label">Remote</div>
+                    </div>
+                </div>
+                <div class="call-controls">
+                    <button id="end-call-btn" class="btn btn-end" disabled>End Call</button>
+                </div>
+                <h3>Call Log</h3>
+                <div class="call-log" id="call-log"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Incoming Call Notification -->
+    <div id="incoming-call" class="incoming-call">
+        <h3>Incoming Call</h3>
+        <p id="caller-info">Someone is calling you</p>
+        <div class="incoming-call-buttons">
+            <button id="accept-call-btn" class="btn btn-audio">Accept</button>
+            <button id="reject-call-btn" class="btn btn-end">Reject</button>
+        </div>
+    </div>
+
+    <!-- Include Socket.io -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    
+    <script>
+        // Constants
+        const API_URL = 'http://localhost:4400/api';
+        
+        // DOM Elements
+        const loginContainer = document.getElementById('login-container');
+        const appContainer = document.getElementById('app-container');
+        const connectionStatus = document.getElementById('connection-status');
+        const usersList = document.getElementById('users-list');
+        const audioCallBtn = document.getElementById('audio-call-btn');
+        const videoCallBtn = document.getElementById('video-call-btn');
+        const endCallBtn = document.getElementById('end-call-btn');
+        const localVideo = document.getElementById('local-video');
+        const remoteVideo = document.getElementById('remote-video');
+        const callLog = document.getElementById('call-log');
+        const incomingCallDiv = document.getElementById('incoming-call');
+        const callerInfo = document.getElementById('caller-info');
+        const acceptCallBtn = document.getElementById('accept-call-btn');
+        const rejectCallBtn = document.getElementById('reject-call-btn');
+        
+        // State variables
+        let currentUser = null;
+        let token = localStorage.getItem('token');
+        let socket = null;
+        let selectedUserId = null;
+        let selectedUsername = null;
+        let webRTCManager = null;
+        
+        // Event Listeners
+        document.getElementById('login-btn').addEventListener('click', login);
+        audioCallBtn.addEventListener('click', () => initiateCall('audio'));
+        videoCallBtn.addEventListener('click', () => initiateCall('video'));
+        endCallBtn.addEventListener('click', endCall);
+        acceptCallBtn.addEventListener('click', acceptIncomingCall);
+        rejectCallBtn.addEventListener('click', rejectIncomingCall);
+        
+        // Check if already logged in
+        if (token) {
+            fetchCurrentUser();
+        }
+        
+        // Functions
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                alert('Please enter email and password');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.token) {
+                    localStorage.setItem('token', data.token);
+                    token = data.token;
+                    currentUser = data;
+                    showApp();
+                    initializeSocket();
+                } else {
+                    alert(data.message || 'Login failed');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('An error occurred during login');
+            }
+        }
+        
+        async function fetchCurrentUser() {
+            try {
+                const response = await fetch(`${API_URL}/users/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Authentication failed');
+                }
+                
+                currentUser = await response.json();
+                showApp();
+                initializeSocket();
+            } catch (error) {
+                console.error('Auth error:', error);
+                localStorage.removeItem('token');
+                token = null;
+            }
+        }
+        
+        function showApp() {
+            loginContainer.style.display = 'none';
+            appContainer.style.display = 'block';
+            logMessage('Logged in as: ' + currentUser.username);
+        }
+        
+        function initializeSocket() {
+            socket = io('http://localhost:4400', {
+                query: { token },
+                transports: ['websocket', 'polling']
+            });
+            
+            socket.on('connect', () => {
+                connectionStatus.textContent = 'Connected to server';
+                connectionStatus.className = 'connection-status status-connected';
+                logMessage('Socket connected: ' + socket.id);
+                
+                // Send user ID to server
+                socket.emit('user_connected', currentUser._id);
+                
+                // Initialize WebRTC manager
+                initializeWebRTC();
+            });
+            
+            socket.on('connect_error', (error) => {
+                console.error('Socket connection error:', error);
+                connectionStatus.textContent = 'Connection error: ' + error.message;
+                connectionStatus.className = 'connection-status status-disconnected';
+                logMessage('Connection error: ' + error.message);
+            });
+            
+            socket.on('disconnect', () => {
+                connectionStatus.textContent = 'Disconnected from server';
+                connectionStatus.className = 'connection-status status-disconnected';
+                logMessage('Socket disconnected');
+            });
+            
+            // User status updates
+            socket.on('user_status', (data) => {
+                updateUserStatus(data.userId, data.status);
+            });
+            
+            // Get online users
+            fetchUsers();
+        }
+        
+        function initializeWebRTC() {
+            // Create WebRTC manager
+            webRTCManager = new WebRTCManager(socket, currentUser._id);
+        }
+        
+        async function fetchUsers() {
+            try {
+                const response = await fetch(`${API_URL}/users/all`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const users = await response.json();
+                renderUsers(users);
+            } catch (error) {
+                console.error('Error fetching users:', error);
+                logMessage('Error fetching users: ' + error.message);
+            }
+        }
+        
+        function renderUsers(users) {
+            usersList.innerHTML = '';
+            
+            if (users.length === 0) {
+                usersList.innerHTML = '<div class="user-item">No users available</div>';
+                return;
+            }
+            
+            users.forEach(user => {
+                if (user._id === currentUser._id) return; // Skip current user
+                
+                const userItem = document.createElement('div');
+                userItem.className = `user-item ${selectedUserId === user._id ? 'selected' : ''}`;
+                userItem.dataset.userId = user._id;
+                
+                const statusClass = user.status === 'online' ? 'online' : 'offline';
+                
+                userItem.innerHTML = `
+                    <span class="status ${statusClass}"></span>
+                    <span class="username">${user.username}</span>
+                `;
+                
+                userItem.addEventListener('click', () => selectUser(user._id, user.username));
+                
+                usersList.appendChild(userItem);
+            });
+        }
+        
+        function selectUser(userId, username) {
+            selectedUserId = userId;
+            selectedUsername = username;
+            
+            // Update UI
+            document.querySelectorAll('.user-item').forEach(item => {
+                item.classList.toggle('selected', item.dataset.userId === userId);
+            });
+            
+            // Enable call buttons
+            audioCallBtn.disabled = false;
+            videoCallBtn.disabled = false;
+            
+            logMessage(`Selected user: ${username}`);
+        }
+        
+        function updateUserStatus(userId, status) {
+            const userItem = document.querySelector(`.user-item[data-userId="${userId}"]`);
+            if (userItem) {
+                const statusIndicator = userItem.querySelector('.status');
+                if (statusIndicator) {
+                    statusIndicator.className = `status ${status === 'online' ? 'online' : 'offline'}`;
+                }
+            }
+        }
+        
+        function initiateCall(callType) {
+            if (!selectedUserId) {
+                alert('Please select a user to call');
+                return;
+            }
+            
+            logMessage(`Initiating ${callType} call to ${selectedUsername}...`);
+            
+            webRTCManager.initiateCall(selectedUserId, callType)
+                .then(success => {
+                    if (success) {
+                        endCallBtn.disabled = false;
+                        audioCallBtn.disabled = true;
+                        videoCallBtn.disabled = true;
+                    }
+                })
+                .catch(error => {
+                    logMessage('Error initiating call: ' + error.message);
+                });
+        }
+        
+        function endCall() {
+            webRTCManager.endCall();
+            endCallBtn.disabled = true;
+            audioCallBtn.disabled = false;
+            videoCallBtn.disabled = false;
+            logMessage('Call ended');
+        }
+        
+        function showIncomingCall(caller, callType) {
+            callerInfo.textContent = `${caller.name || 'Someone'} is calling (${callType})`;
+            incomingCallDiv.style.display = 'block';
+            
+            // Auto-hide after 30 seconds if not answered
+            setTimeout(() => {
+                if (incomingCallDiv.style.display === 'block') {
+                    incomingCallDiv.style.display = 'none';
+                    webRTCManager.rejectCall(caller.id, 'timeout');
+                }
+            }, 30000);
+        }
+        
+        function acceptIncomingCall() {
+            incomingCallDiv.style.display = 'none';
+            webRTCManager.acceptCurrentCall();
+            endCallBtn.disabled = false;
+            audioCallBtn.disabled = true;
+            videoCallBtn.disabled = true;
+            logMessage('Call accepted');
+        }
+        
+        function rejectIncomingCall() {
+            incomingCallDiv.style.display = 'none';
+            webRTCManager.rejectCurrentCall();
+            logMessage('Call rejected');
+        }
+        
+        function logMessage(message) {
+            const time = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `[${time}] ${message}`;
+            callLog.appendChild(logEntry);
+            callLog.scrollTop = callLog.scrollHeight;
+        }
+        
+        // WebRTC Manager Class
+        class WebRTCManager {
+            constructor(socket, userId) {
+                this.socket = socket;
+                this.userId = userId;
+                this.peerConnection = null;
+                this.localStream = null;
+                this.remoteStream = null;
+                this.callInProgress = false;
+                this.callType = null;
+                this.receiverId = null;
+                this.callId = null;
+                this.incomingCallData = null;
+                
+                // WebRTC Config
+                this.webrtcConfig = {
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' }
+                    ],
+                    iceCandidatePoolSize: 2
+                };
+                
+                this.setupSocketListeners();
+                logMessage('WebRTC Manager initialized');
+            }
+            
+            setupSocketListeners() {
+                // WebRTC signaling
+                this.socket.on('webrtc_offer', async (data) => {
+                    logMessage(`Received offer from ${data.senderId}`);
+                    
+                    if (this.callInProgress) {
+                        // Auto-reject if already in a call
+                        this.socket.emit('webrtc_reject_call', {
+                            callerId: data.senderId,
+                            reason: 'already_in_call'
+                        });
+                        return;
+                    }
+                    
+                    // Store incoming call data
+                    this.incomingCallData = {
+                        callerId: data.senderId,
+                        offer: data.offer,
+                        callType: data.callType
+                    };
+                    
+                    // Fetch caller's username
+                    try {
+                        const response = await fetch(`${API_URL}/users/${data.senderId}`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        const caller = await response.json();
+                        
+                        // Show incoming call notification
+                        showIncomingCall({
+                            id: data.senderId,
+                            name: caller.username
+                        }, data.callType);
+                    } catch (error) {
+                        // Show generic notification if we can't get user details
+                        showIncomingCall({ id: data.senderId }, data.callType);
+                    }
+                });
+                
+                this.socket.on('webrtc_answer', async (data) => {
+                    logMessage('Received answer');
+                    if (!this.peerConnection) {
+                        logMessage('No peer connection, ignoring answer');
+                        return;
+                    }
+                    
+                    try {
+                        await this.peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+                        logMessage('Set remote description from answer');
+                    } catch (error) {
+                        logMessage('Error setting remote description: ' + error.message);
+                    }
+                });
+                
+                this.socket.on('webrtc_ice_candidate', async (data) => {
+                    if (!this.peerConnection) {
+                        logMessage('No peer connection, ignoring ICE candidate');
+                        return;
+                    }
+                    
+                    try {
+                        await this.peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+                        logMessage('Added ICE candidate');
+                    } catch (error) {
+                        logMessage('Error adding ICE candidate: ' + error.message);
+                    }
+                });
+                
+                this.socket.on('webrtc_end_call', (data) => {
+                    logMessage('Remote peer ended the call');
+                    this.handleCallEnded();
+                });
+                
+                this.socket.on('webrtc_call_rejected', (data) => {
+                    logMessage('Call rejected by remote peer');
+                    this.handleCallRejected();
+                });
+                
+                // Call management
+                this.socket.on('incoming_call', (data) => {
+                    logMessage(`Incoming call from ${data.callerName}`);
+                    // The webrtc_offer event will handle the actual call setup
+                });
+                
+                this.socket.on('call_status_update', (data) => {
+                    logMessage(`Call status update: ${data.status}`);
+                });
+            }
+            
+            async setupLocalStream(videoEnabled = false) {
+                try {
+                    const constraints = {
+                        audio: true,
+                        video: videoEnabled
+                    };
+                    
+                    logMessage(`Requesting media: audio=${constraints.audio}, video=${constraints.video}`);
+                    this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                    
+                    localVideo.srcObject = this.localStream;
+                    logMessage('Local stream set up successfully');
+                    
+                    return true;
+                } catch (error) {
+                    logMessage('Error accessing media devices: ' + error.message);
+                    alert(`Could not access ${videoEnabled ? 'camera' : 'microphone'}: ${error.message}`);
+                    return false;
+                }
+            }
+            
+            createPeerConnection() {
+                this.peerConnection = new RTCPeerConnection(this.webrtcConfig);
+                
+                // Add local stream tracks to peer connection
+                if (this.localStream) {
+                    this.localStream.getTracks().forEach(track => {
+                        this.peerConnection.addTrack(track, this.localStream);
+                        logMessage(`Added track: ${track.kind}`);
+                    });
+                }
+                
+                // Handle incoming tracks (remote stream)
+                this.peerConnection.ontrack = (event) => {
+                    logMessage(`Received remote track: ${event.track.kind}`);
+                    this.remoteStream = event.streams[0];
+                    remoteVideo.srcObject = this.remoteStream;
+                };
+                
+                // ICE candidate handling
+                this.peerConnection.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        this.socket.emit('webrtc_ice_candidate', {
+                            candidate: event.candidate,
+                            receiverId: this.receiverId
+                        });
+                        logMessage('Sent ICE candidate');
+                    }
+                };
+                
+                // Connection state monitoring
+                this.peerConnection.onconnectionstatechange = () => {
+                    logMessage('Connection state: ' + this.peerConnection.connectionState);
+                    
+                    if (this.peerConnection.connectionState === 'connected') {
+                        logMessage('Peer connection established!');
+                    } else if (['disconnected', 'failed', 'closed'].includes(this.peerConnection.connectionState)) {
+                        this.handleCallEnded();
+                    }
+                };
+                
+                // ICE connection state
+                this.peerConnection.oniceconnectionstatechange = () => {
+                    logMessage('ICE connection state: ' + this.peerConnection.iceConnectionState);
+                };
+                
+                logMessage('Peer connection created');
+            }
+            
+            async initiateCall(receiverId, callType = 'audio') {
+                if (this.callInProgress) {
+                    logMessage('Call already in progress');
+                    return false;
+                }
+                
+                this.receiverId = receiverId;
+                this.callType = callType;
+                
+                // Create call record on the server
+                try {
+                    logMessage('Creating call record...');
+                    const response = await fetch(`${API_URL}/calls`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            receiverId: receiverId,
+                            callType: callType,
+                            status: 'initiated'
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to create call record');
+                    }
+                    
+                    const callRecord = await response.json();
+                    this.callId = callRecord.callId;
+                    logMessage('Call record created with ID: ' + this.callId);
+                } catch (error) {
+                    logMessage('Error creating call record: ' + error.message);
+                    return false;
+                }
+                
+                // Setup media
+                const mediaSetup = await this.setupLocalStream(callType === 'video');
+                if (!mediaSetup) {
+                    return false;
+                }
+                
+                // Create peer connection
+                this.createPeerConnection();
+                
+                // Create offer
+                try {
+                    const offer = await this.peerConnection.createOffer();
+                    await this.peerConnection.setLocalDescription(offer);
+                    logMessage('Created and set local offer');
+                    
+                    // Send offer to receiver
+                    this.socket.emit('webrtc_offer', {
+                        offer: offer,
+                        receiverId: receiverId,
+                        callType: callType
+                    });
+                    
+                    logMessage('Sent offer to receiver');
+                    this.callInProgress = true;
+                    
+                    return true;
+                } catch (error) {
+                    logMessage('Error creating offer: ' + error.message);
+                    this.cleanupCall();
+                    return false;
+                }
+            }
+            
+            async acceptCurrentCall() {
+                if (!this.incomingCallData) {
+                    logMessage('No incoming call to accept');
+                    return false;
+                }
+                
+                const { callerId, offer, callType } = this.incomingCallData;
+                this.receiverId = callerId;
+                this.callType = callType;
+                
+                // Setup media
+                const mediaSetup = await this.setupLocalStream(callType === 'video');
+                if (!mediaSetup) {
+                    this.rejectCurrentCall('media_access_failed');
+                    return false;
+                }
+                
+                // Create peer connection
+                this.createPeerConnection();
+                
+                // Set remote description (the offer)
+                try {
+                    await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+                    logMessage('Set remote description from offer');
+                    
+                    // Create answer
+                    const answer = await this.peerConnection.createAnswer();
+                    await this.peerConnection.setLocalDescription(answer);
+                    logMessage('Created and set local answer');
+                    
+                    // Send answer to caller
+                    this.socket.emit('webrtc_answer', {
+                        answer: answer,
+                        receiverId: callerId
+                    });
+                    
+                    logMessage('Sent answer to caller');
+                    this.callInProgress = true;
+                    this.incomingCallData = null;
+                    
+                    return true;
+                } catch (error) {
+                    logMessage('Error accepting call: ' + error.message);
+                    this.cleanupCall();
+                    return false;
+                }
+            }
+            
+            rejectCurrentCall(reason = 'rejected_by_user') {
+                if (!this.incomingCallData) {
+                    logMessage('No incoming call to reject');
+                    return;
+                }
+                
+                const { callerId } = this.incomingCallData;
+                
+                this.socket.emit('webrtc_reject_call', {
+                    callerId: callerId,
+                    reason: reason
+                });
+                
+                logMessage('Rejected call: ' + reason);
+                this.incomingCallData = null;
+            }
+            
+            endCall() {
+                if (!this.callInProgress) {
+                    logMessage('No call in progress');
+                    return;
+                }
+                
+                // Notify the other user
+                this.socket.emit('webrtc_end_call', {
+                    receiverId: this.receiverId
+                });
+                
+                logMessage('Sent end call signal');
+                
+                // Update call status on server
+                if (this.callId) {
+                    this.updateCallStatus('ended');
+                }
+                
+                this.handleCallEnded();
+            }
+            
+            handleCallEnded() {
+                // Clean up resources
+                this.cleanupCall();
+                
+                // Update UI
+                endCallBtn.disabled = true;
+                audioCallBtn.disabled = false;
+                videoCallBtn.disabled = false;
+                
+                logMessage('Call ended');
+            }
+            
+            handleCallRejected() {
+                // Clean up resources
+                this.cleanupCall();
+                
+                // Update UI
+                endCallBtn.disabled = true;
+                audioCallBtn.disabled = false;
+                videoCallBtn.disabled = false;
+                
+                alert('Call was rejected');
+            }
+            
+            cleanupCall() {
+                // Stop all tracks in the streams
+                if (this.localStream) {
+                    this.localStream.getTracks().forEach(track => {
+                        track.stop();
+                        logMessage(`Stopped ${track.kind} track`);
+                    });
+                    this.localStream = null;
+                }
+                
+                // Clear video elements
+                localVideo.srcObject = null;
+                remoteVideo.srcObject = null;
+                
+                // Close peer connection
+                if (this.peerConnection) {
+                    this.peerConnection.close();
+                    this.peerConnection = null;
+                    logMessage('Closed peer connection');
+                }
+                
+                // Reset state
+                this.callInProgress = false;
+                this.remoteStream = null;
+                
+                // Keep callId for the record but reset other call-specific properties
+                this.receiverId = null;
+                this.callType = null;
+                
+                logMessage('Call cleanup completed');
+            }
+            
+            async updateCallStatus(status) {
+                if (!this.callId) {
+                    logMessage('No call ID to update status');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`${API_URL}/calls/${this.callId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            status: status
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to update call status');
+                    }
+                    
+                    logMessage(`Call status updated to: ${status}`);
+                } catch (error) {
+                    logMessage('Error updating call status: ' + error.message);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

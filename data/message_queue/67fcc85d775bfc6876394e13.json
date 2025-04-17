@@ -1,0 +1,14 @@
+[
+  {
+    "_id": "temp_1744877259725",
+    "sender": "67efe93242a793edebea6df5",
+    "receiver": "67fcc85d775bfc6876394e13",
+    "content": "Cc",
+    "rawContent": "Cc",
+    "contentType": "text",
+    "createdAt": "2025-04-17T08:07:39.192Z",
+    "status": "pending",
+    "encrypted": true,
+    "queuedAt": "2025-04-17T08:07:39.194Z"
+  }
+]

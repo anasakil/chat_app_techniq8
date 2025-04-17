@@ -1,4 +1,10 @@
 const Call = require('../models/Call');
+const crypto = require('crypto');
+
+// Generate a unique call ID
+const generateCallId = () => {
+    return crypto.randomBytes(16).toString('hex');
+};
 
 // @desc    Create a new call log
 // @route   POST /api/calls
@@ -11,14 +17,31 @@ const createCallLog = async (req, res, next) => {
             status = 'initiated' 
         } = req.body;
 
+        // Generate a unique call ID
+        const callId = generateCallId();
+
         // Create call log
         const callLog = await Call.create({
             caller: req.user._id,
             receiver: receiverId,
             callType,
             status,
-            startTime: new Date()
+            startTime: new Date(),
+            callId: callId
         });
+
+        // Notify the receiver about the call if they're online
+        if (req.io && req.onlineUsers) {
+            const receiverSocketId = req.onlineUsers.get(receiverId);
+            if (receiverSocketId) {
+                req.io.to(receiverSocketId).emit('incoming_call', {
+                    callId: callId,
+                    callerId: req.user._id,
+                    callerName: req.user.username,
+                    callType: callType
+                });
+            }
+        }
 
         res.status(201).json(callLog);
     } catch (error) {
@@ -35,11 +58,11 @@ const updateCallLog = async (req, res, next) => {
         const { callId } = req.params;
         const { 
             status, 
-            endTime = new Date() 
+            endTime = status === 'ended' ? new Date() : null 
         } = req.body;
 
-        // Find and update call log
-        const callLog = await Call.findById(callId);
+        // Find and update call log by call ID field (not MongoDB _id)
+        const callLog = await Call.findOne({ callId: callId });
 
         if (!callLog) {
             return res.status(404).json({ message: 'Call log not found' });
@@ -52,14 +75,33 @@ const updateCallLog = async (req, res, next) => {
         }
 
         callLog.status = status;
-        callLog.endTime = endTime;
+        
+        if (endTime) {
+            callLog.endTime = endTime;
+        }
 
-        // Calculate duration if possible
-        if (callLog.startTime && callLog.endTime) {
-            callLog.duration = (callLog.endTime - callLog.startTime) / 1000; // in seconds
+        // Calculate duration if possible and status is ended
+        if (status === 'ended' && callLog.startTime) {
+            callLog.duration = Math.round((callLog.endTime || new Date() - callLog.startTime) / 1000); // in seconds
         }
 
         await callLog.save();
+
+        // Notify the other party about the call status change
+        if (req.io && req.onlineUsers) {
+            const otherUserId = callLog.caller.equals(req.user._id) ? 
+                callLog.receiver.toString() : callLog.caller.toString();
+            
+            const otherUserSocketId = req.onlineUsers.get(otherUserId);
+            
+            if (otherUserSocketId) {
+                req.io.to(otherUserSocketId).emit('call_status_update', {
+                    callId: callId,
+                    status: status,
+                    updatedBy: req.user._id
+                });
+            }
+        }
 
         res.json(callLog);
     } catch (error) {
@@ -73,7 +115,7 @@ const updateCallLog = async (req, res, next) => {
 // @access  Private
 const getUserCallLogs = async (req, res, next) => {
     try {
-        const { status, type } = req.query;
+        const { status, type, limit = 50 } = req.query;
 
         // Build query
         const query = {
@@ -98,7 +140,7 @@ const getUserCallLogs = async (req, res, next) => {
             .populate('caller', 'username profilePicture')
             .populate('receiver', 'username profilePicture')
             .sort({ createdAt: -1 })
-            .limit(50);
+            .limit(parseInt(limit));
 
         res.json(callLogs);
     } catch (error) {
@@ -114,7 +156,8 @@ const getCallLogById = async (req, res, next) => {
     try {
         const { callId } = req.params;
 
-        const callLog = await Call.findById(callId)
+        // Find call by callId field
+        const callLog = await Call.findOne({ callId: callId })
             .populate('caller', 'username profilePicture')
             .populate('receiver', 'username profilePicture');
 

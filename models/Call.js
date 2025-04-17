@@ -23,7 +23,7 @@ const CallSchema = new mongoose.Schema({
     },
     startTime: { 
         type: Date, 
-        default: null 
+        default: Date.now 
     },
     endTime: { 
         type: Date, 
@@ -68,3 +68,8 @@ const CallSchema = new mongoose.Schema({
     timestamps: true
 });
 
+// Index for faster lookups by callId
+CallSchema.index({ callId: 1 }, { unique: true });
+
+// IMPORTANT: Export the model
+module.exports = mongoose.model('Call', CallSchema);
