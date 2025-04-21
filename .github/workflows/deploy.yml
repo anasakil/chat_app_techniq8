@@ -2,7 +2,7 @@ name: Deploy Backend to Production
 
 on:
   push:
-    branches: [ main ] # Change this to your main branch name
+    branches: [ main ]  # ou master, selon votre branche principale
 
 jobs:
   deploy:
@@ -10,17 +10,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests (si vous avez des tests)
-        run: npm test || true
 
       - name: Configure SSH
         run: |
@@ -34,7 +23,7 @@ jobs:
           ssh ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "mkdir -p ${{ secrets.SERVER_PATH }}"
           rsync -avz --exclude='.git' --exclude='node_modules' ./ ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}/
           
-      - name: Setup application on server
+      - name: Setup environment file
         run: |
           ssh ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "cd ${{ secrets.SERVER_PATH }} && \
           echo 'PORT=4400
@@ -50,46 +39,7 @@ jobs:
           SOCKET_PORT=4400
           UPLOAD_DIRECTORY=./uploads
           DEBUG=app:*
-          REGISTRATION_KEYS=1234567890,2345678901,3456789012,4567890123,5678901234,6789012345,7890123456,8901234567,9012345678,0123456789' > .env && \
-          npm install --production && \
-          mkdir -p uploads"
-
-      - name: Create Docker Compose file
-        run: |
-          ssh ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "cd ${{ secrets.SERVER_PATH }} && \
-          echo 'version: \"3.8\"
-          
-          services:
-            backend:
-              build: .
-              container_name: chat-app-backend
-              restart: always
-              ports:
-                - \"4400:4400\"
-              volumes:
-                - ./uploads:/app/uploads
-                - ./.env:/app/.env
-              environment:
-                - NODE_ENV=production
-          ' > docker-compose.yml"
-
-      - name: Create Dockerfile
-        run: |
-          ssh ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "cd ${{ secrets.SERVER_PATH }} && \
-          echo 'FROM node:18-alpine
-          
-          WORKDIR /app
-          
-          COPY package*.json ./
-          
-          RUN npm install --production
-          
-          COPY . .
-          
-          EXPOSE 4400
-          
-          CMD [\"node\", \"server.js\"]
-          ' > Dockerfile"
+          REGISTRATION_KEYS=1234567890,2345678901,3456789012,4567890123,5678901234,6789012345,7890123456,8901234567,9012345678,0123456789' > .env"
 
       - name: Build and start Docker containers
         run: |
@@ -100,4 +50,4 @@ jobs:
 
       - name: Verify deployment
         run: |
-          ssh ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "docker ps | grep chat-app-backend"
+          ssh ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "docker ps | grep chat-backend"
