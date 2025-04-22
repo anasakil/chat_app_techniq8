@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebRTC Call Test</title>
+    <title>Agora Call Test</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -97,10 +97,7 @@
             border-radius: 4px;
             overflow: hidden;
             position: relative;
-        }
-        .video-box video {
-            width: 100%;
-            height: 100%;
+            height: 240px;
             background-color: #000;
         }
         .video-box .label {
@@ -185,12 +182,38 @@
             gap: 10px;
             margin-top: 15px;
         }
+        .media-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .media-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background-color: #f5f5f5;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .media-btn:hover {
+            background-color: #e0e0e0;
+        }
+        .media-btn.active {
+            background-color: #e3f2fd;
+        }
+        .media-btn.muted {
+            background-color: #ffebee;
+        }
     </style>
 </head>
 <body>
     <!-- Login Form -->
     <div id="login-container" class="login-container">
-        <h2>Login to Test WebRTC</h2>
+        <h2>Login to Test Agora Call</h2>
         <div class="form-group">
             <label for="email">Email:</label>
             <input type="email" id="email" placeholder="Enter your email">
@@ -204,7 +227,7 @@
 
     <!-- Main Application -->
     <div id="app-container" style="display: none;">
-        <h1>WebRTC Call Test</h1>
+        <h1>Agora Call Test</h1>
         <div class="connection-status" id="connection-status">Connecting to server...</div>
         
         <div class="container">
@@ -223,15 +246,21 @@
                 <h2>Call</h2>
                 <div class="video-container">
                     <div class="video-box">
-                        <video id="local-video" autoplay muted playsinline></video>
+                        <div id="local-stream-container"></div>
                         <div class="label">You</div>
                     </div>
                     <div class="video-box">
-                        <video id="remote-video" autoplay playsinline></video>
+                        <div id="remote-stream-container"></div>
                         <div class="label">Remote</div>
                     </div>
                 </div>
-                <div class="call-controls">
+                <div class="media-controls">
+                    <button id="mic-btn" class="media-btn" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                    </button>
+                    <button id="video-btn" class="media-btn" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                    </button>
                     <button id="end-call-btn" class="btn btn-end" disabled>End Call</button>
                 </div>
                 <h3>Call Log</h3>
@@ -253,9 +282,13 @@
     <!-- Include Socket.io -->
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     
+    <!-- Include Agora SDK -->
+    <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
+    
     <script>
         // Constants
         const API_URL = 'http://localhost:4400/api';
+        const AGORA_APP_ID = 'd35effd01b264bac87f3e87a973d92a9'; 
         
         // DOM Elements
         const loginContainer = document.getElementById('login-container');
@@ -265,8 +298,10 @@
         const audioCallBtn = document.getElementById('audio-call-btn');
         const videoCallBtn = document.getElementById('video-call-btn');
         const endCallBtn = document.getElementById('end-call-btn');
-        const localVideo = document.getElementById('local-video');
-        const remoteVideo = document.getElementById('remote-video');
+        const micBtn = document.getElementById('mic-btn');
+        const videoBtn = document.getElementById('video-btn');
+        const localStreamContainer = document.getElementById('local-stream-container');
+        const remoteStreamContainer = document.getElementById('remote-stream-container');
         const callLog = document.getElementById('call-log');
         const incomingCallDiv = document.getElementById('incoming-call');
         const callerInfo = document.getElementById('caller-info');
@@ -279,13 +314,15 @@
         let socket = null;
         let selectedUserId = null;
         let selectedUsername = null;
-        let webRTCManager = null;
+        let agoraManager = null;
         
         // Event Listeners
         document.getElementById('login-btn').addEventListener('click', login);
         audioCallBtn.addEventListener('click', () => initiateCall('audio'));
         videoCallBtn.addEventListener('click', () => initiateCall('video'));
         endCallBtn.addEventListener('click', endCall);
+        micBtn.addEventListener('click', toggleMicrophone);
+        videoBtn.addEventListener('click', toggleVideo);
         acceptCallBtn.addEventListener('click', acceptIncomingCall);
         rejectCallBtn.addEventListener('click', rejectIncomingCall);
         
@@ -372,8 +409,8 @@
                 // Send user ID to server
                 socket.emit('user_connected', currentUser._id);
                 
-                // Initialize WebRTC manager
-                initializeWebRTC();
+                // Initialize Agora manager
+                initializeAgora();
             });
             
             socket.on('connect_error', (error) => {
@@ -394,13 +431,29 @@
                 updateUserStatus(data.userId, data.status);
             });
             
+            // Incoming call signal
+            socket.on('incoming_call', (data) => {
+                logMessage(`Incoming call from ${data.callerName}`);
+                showIncomingCall(data);
+            });
+            
+            // Call status updates
+            socket.on('call_status_update', (data) => {
+                logMessage(`Call status update: ${data.status}`);
+                
+                if (data.status === 'ended') {
+                    handleCallEnded();
+                }
+            });
+            
             // Get online users
             fetchUsers();
         }
         
-        function initializeWebRTC() {
-            // Create WebRTC manager
-            webRTCManager = new WebRTCManager(socket, currentUser._id);
+        function initializeAgora() {
+            // Create Agora manager
+            agoraManager = new AgoraManager(socket, currentUser._id);
+            logMessage('Agora Manager initialized');
         }
         
         async function fetchUsers() {
@@ -473,7 +526,7 @@
             }
         }
         
-        function initiateCall(callType) {
+        async function initiateCall(callType) {
             if (!selectedUserId) {
                 alert('Please select a user to call');
                 return;
@@ -481,53 +534,187 @@
             
             logMessage(`Initiating ${callType} call to ${selectedUsername}...`);
             
-            webRTCManager.initiateCall(selectedUserId, callType)
-                .then(success => {
-                    if (success) {
-                        endCallBtn.disabled = false;
-                        audioCallBtn.disabled = true;
-                        videoCallBtn.disabled = true;
-                    }
-                })
-                .catch(error => {
-                    logMessage('Error initiating call: ' + error.message);
+            try {
+                // Create call record on the server
+                const callResponse = await fetch(`${API_URL}/calls`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        receiverId: selectedUserId,
+                        callType: callType,
+                        status: 'initiated'
+                    })
                 });
+                
+                if (!callResponse.ok) {
+                    throw new Error('Failed to create call record');
+                }
+                
+                const callRecord = await callResponse.json();
+                const callId = callRecord.callId;
+                
+                logMessage('Call record created with ID: ' + callId);
+                
+                // Normally you'd request an Agora token from your server here
+                // For demo purposes, we'll proceed without a real token
+                logMessage('Proceeding without Agora token (demo only)');
+                
+                // Start the call with Agora
+                const success = await agoraManager.initiateCall(selectedUserId, callType, callId);
+                
+                if (success) {
+                    endCallBtn.disabled = false;
+                    micBtn.disabled = false;
+                    videoBtn.disabled = callType === 'audio';
+                    audioCallBtn.disabled = true;
+                    videoCallBtn.disabled = true;
+                }
+            } catch (error) {
+                logMessage('Error initiating call: ' + error.message);
+                alert('Failed to initiate call: ' + error.message);
+            }
+        }
+        
+        function toggleMicrophone() {
+            if (agoraManager && agoraManager.callInProgress) {
+                const muted = agoraManager.toggleAudio();
+                micBtn.classList.toggle('muted', muted);
+                logMessage(muted ? 'Microphone muted' : 'Microphone unmuted');
+            }
+        }
+        
+        function toggleVideo() {
+            if (agoraManager && agoraManager.callInProgress) {
+                const videoOff = agoraManager.toggleVideo();
+                videoBtn.classList.toggle('muted', videoOff);
+                logMessage(videoOff ? 'Camera turned off' : 'Camera turned on');
+            }
         }
         
         function endCall() {
-            webRTCManager.endCall();
-            endCallBtn.disabled = true;
-            audioCallBtn.disabled = false;
-            videoCallBtn.disabled = false;
+            if (agoraManager) {
+                agoraManager.endCall();
+            }
+            
+            handleCallEnded();
             logMessage('Call ended');
         }
         
-        function showIncomingCall(caller, callType) {
-            callerInfo.textContent = `${caller.name || 'Someone'} is calling (${callType})`;
+        function showIncomingCall(data) {
+            callerInfo.textContent = `${data.callerName || 'Someone'} is calling (${data.callType})`;
             incomingCallDiv.style.display = 'block';
+            
+            // Store call data
+            incomingCallDiv.dataset.callerId = data.callerId;
+            incomingCallDiv.dataset.callId = data.callId;
+            incomingCallDiv.dataset.callType = data.callType;
             
             // Auto-hide after 30 seconds if not answered
             setTimeout(() => {
                 if (incomingCallDiv.style.display === 'block') {
                     incomingCallDiv.style.display = 'none';
-                    webRTCManager.rejectCall(caller.id, 'timeout');
+                    rejectCall(data.callerId, data.callId, 'timeout');
                 }
             }, 30000);
         }
         
-        function acceptIncomingCall() {
+        async function acceptIncomingCall() {
+            const callerId = incomingCallDiv.dataset.callerId;
+            const callId = incomingCallDiv.dataset.callId;
+            const callType = incomingCallDiv.dataset.callType;
+            
             incomingCallDiv.style.display = 'none';
-            webRTCManager.acceptCurrentCall();
-            endCallBtn.disabled = false;
-            audioCallBtn.disabled = true;
-            videoCallBtn.disabled = true;
-            logMessage('Call accepted');
+            
+            try {
+                // Update call status to connected
+                await fetch(`${API_URL}/calls/${callId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        status: 'connected'
+                    })
+                });
+                
+                // Normally you'd request an Agora token here
+                // For demo, we'll proceed without a real token
+                logMessage('Proceeding without Agora token (demo only)');
+                
+                // Join Agora channel
+                const success = await agoraManager.joinCall(callerId, callType, callId);
+                
+                if (success) {
+                    endCallBtn.disabled = false;
+                    micBtn.disabled = false;
+                    videoBtn.disabled = callType === 'audio';
+                    audioCallBtn.disabled = true;
+                    videoCallBtn.disabled = true;
+                    
+                    logMessage('Call accepted');
+                } else {
+                    logMessage('Failed to join Agora channel');
+                    alert('Failed to join call');
+                }
+            } catch (error) {
+                logMessage('Error accepting call: ' + error.message);
+                alert('Failed to accept call: ' + error.message);
+            }
         }
         
-        function rejectIncomingCall() {
+        async function rejectIncomingCall() {
+            const callerId = incomingCallDiv.dataset.callerId;
+            const callId = incomingCallDiv.dataset.callId;
+            
             incomingCallDiv.style.display = 'none';
-            webRTCManager.rejectCurrentCall();
+            await rejectCall(callerId, callId, 'rejected');
             logMessage('Call rejected');
+        }
+        
+        async function rejectCall(callerId, callId, reason) {
+            try {
+                // Update call status to rejected
+                await fetch(`${API_URL}/calls/${callId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        status: 'rejected'
+                    })
+                });
+                
+                // Notify caller that call was rejected
+                socket.emit('call_rejected', {
+                    callerId: callerId,
+                    callId: callId,
+                    reason: reason
+                });
+            } catch (error) {
+                console.error('Error rejecting call:', error);
+            }
+        }
+        
+        function handleCallEnded() {
+            // Reset UI
+            endCallBtn.disabled = true;
+            micBtn.disabled = true;
+            videoBtn.disabled = true;
+            audioCallBtn.disabled = false;
+            videoCallBtn.disabled = false;
+            
+            // Reset media buttons state
+            micBtn.classList.remove('muted');
+            videoBtn.classList.remove('muted');
+            
+            if (agoraManager) {
+                agoraManager.resetUI();
+            }
         }
         
         function logMessage(message) {
@@ -538,429 +725,320 @@
             callLog.scrollTop = callLog.scrollHeight;
         }
         
-        // WebRTC Manager Class
-        class WebRTCManager {
+        // Agora Manager Class
+        class AgoraManager {
             constructor(socket, userId) {
                 this.socket = socket;
                 this.userId = userId;
-                this.peerConnection = null;
-                this.localStream = null;
-                this.remoteStream = null;
+                this.client = null;
+                this.localAudioTrack = null;
+                this.localVideoTrack = null;
                 this.callInProgress = false;
                 this.callType = null;
                 this.receiverId = null;
                 this.callId = null;
-                this.incomingCallData = null;
-                
-                // WebRTC Config
-                this.webrtcConfig = {
-                    iceServers: [
-                        { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:stun1.l.google.com:19302' }
-                    ],
-                    iceCandidatePoolSize: 2
-                };
+                this.audioMuted = false;
+                this.videoOff = false;
                 
                 this.setupSocketListeners();
-                logMessage('WebRTC Manager initialized');
+                this.initializeAgoraClient();
+                
+                logMessage('Agora Manager initialized');
             }
             
             setupSocketListeners() {
-                // WebRTC signaling
-                this.socket.on('webrtc_offer', async (data) => {
-                    logMessage(`Received offer from ${data.senderId}`);
-                    
-                    if (this.callInProgress) {
-                        // Auto-reject if already in a call
-                        this.socket.emit('webrtc_reject_call', {
-                            callerId: data.senderId,
-                            reason: 'already_in_call'
-                        });
-                        return;
-                    }
-                    
-                    // Store incoming call data
-                    this.incomingCallData = {
-                        callerId: data.senderId,
-                        offer: data.offer,
-                        callType: data.callType
-                    };
-                    
-                    // Fetch caller's username
-                    try {
-                        const response = await fetch(`${API_URL}/users/${data.senderId}`, {
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        });
-                        const caller = await response.json();
-                        
-                        // Show incoming call notification
-                        showIncomingCall({
-                            id: data.senderId,
-                            name: caller.username
-                        }, data.callType);
-                    } catch (error) {
-                        // Show generic notification if we can't get user details
-                        showIncomingCall({ id: data.senderId }, data.callType);
-                    }
-                });
-                
-                this.socket.on('webrtc_answer', async (data) => {
-                    logMessage('Received answer');
-                    if (!this.peerConnection) {
-                        logMessage('No peer connection, ignoring answer');
-                        return;
-                    }
-                    
-                    try {
-                        await this.peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-                        logMessage('Set remote description from answer');
-                    } catch (error) {
-                        logMessage('Error setting remote description: ' + error.message);
-                    }
-                });
-                
-                this.socket.on('webrtc_ice_candidate', async (data) => {
-                    if (!this.peerConnection) {
-                        logMessage('No peer connection, ignoring ICE candidate');
-                        return;
-                    }
-                    
-                    try {
-                        await this.peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
-                        logMessage('Added ICE candidate');
-                    } catch (error) {
-                        logMessage('Error adding ICE candidate: ' + error.message);
-                    }
-                });
-                
-                this.socket.on('webrtc_end_call', (data) => {
-                    logMessage('Remote peer ended the call');
-                    this.handleCallEnded();
-                });
-                
-                this.socket.on('webrtc_call_rejected', (data) => {
+                // Listen for call related events
+                this.socket.on('call_rejected', (data) => {
                     logMessage('Call rejected by remote peer');
-                    this.handleCallRejected();
+                    if (this.callInProgress) {
+                        this.endCall(true);
+                        alert('Call was rejected');
+                    }
                 });
                 
-                // Call management
-                this.socket.on('incoming_call', (data) => {
-                    logMessage(`Incoming call from ${data.callerName}`);
-                    // The webrtc_offer event will handle the actual call setup
+                this.socket.on('call_answered', (data) => {
+                    logMessage('Call answered by remote peer');
                 });
                 
-                this.socket.on('call_status_update', (data) => {
-                    logMessage(`Call status update: ${data.status}`);
+                this.socket.on('call_ended', (data) => {
+                    logMessage('Remote peer ended the call');
+                    if (this.callInProgress) {
+                        this.endCall(true);
+                    }
                 });
             }
             
-            async setupLocalStream(videoEnabled = false) {
-                try {
-                    const constraints = {
-                        audio: true,
-                        video: videoEnabled
-                    };
+            initializeAgoraClient() {
+                // Initialize Agora client
+                this.client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+                
+                // Setup event handlers
+                this.client.on('user-published', async (user, mediaType) => {
+                    logMessage(`Remote user ${user.uid} published ${mediaType} track`);
                     
-                    logMessage(`Requesting media: audio=${constraints.audio}, video=${constraints.video}`);
-                    this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                    // Subscribe to the remote user
+                    await this.client.subscribe(user, mediaType);
                     
-                    localVideo.srcObject = this.localStream;
-                    logMessage('Local stream set up successfully');
+                    if (mediaType === 'video') {
+                        // Get the remote video track
+                        const remoteVideoTrack = user.videoTrack;
+                        // Play the remote video track
+                        remoteVideoTrack.play(remoteStreamContainer);
+                        logMessage('Remote video track is playing');
+                    }
                     
-                    return true;
-                } catch (error) {
-                    logMessage('Error accessing media devices: ' + error.message);
-                    alert(`Could not access ${videoEnabled ? 'camera' : 'microphone'}: ${error.message}`);
-                    return false;
-                }
+                    if (mediaType === 'audio') {
+                        // Get the remote audio track
+                        const remoteAudioTrack = user.audioTrack;
+                        // Play the remote audio track
+                        remoteAudioTrack.play();
+                        logMessage('Remote audio track is playing');
+                    }
+                });
+                
+                this.client.on('user-unpublished', (user, mediaType) => {
+                    logMessage(`Remote user ${user.uid} unpublished ${mediaType} track`);
+                });
+                
+                this.client.on('user-left', (user) => {
+                    logMessage(`Remote user ${user.uid} left the channel`);
+                    if (this.callInProgress) {
+                        this.endCall(true);
+                        alert('Remote user left the call');
+                    }
+                });
+                
+                this.client.on('connection-state-change', (curState, prevState) => {
+                    logMessage(`Connection state changed from ${prevState} to ${curState}`);
+                });
             }
             
-            createPeerConnection() {
-                this.peerConnection = new RTCPeerConnection(this.webrtcConfig);
-                
-                // Add local stream tracks to peer connection
-                if (this.localStream) {
-                    this.localStream.getTracks().forEach(track => {
-                        this.peerConnection.addTrack(track, this.localStream);
-                        logMessage(`Added track: ${track.kind}`);
-                    });
-                }
-                
-                // Handle incoming tracks (remote stream)
-                this.peerConnection.ontrack = (event) => {
-                    logMessage(`Received remote track: ${event.track.kind}`);
-                    this.remoteStream = event.streams[0];
-                    remoteVideo.srcObject = this.remoteStream;
-                };
-                
-                // ICE candidate handling
-                this.peerConnection.onicecandidate = (event) => {
-                    if (event.candidate) {
-                        this.socket.emit('webrtc_ice_candidate', {
-                            candidate: event.candidate,
-                            receiverId: this.receiverId
-                        });
-                        logMessage('Sent ICE candidate');
-                    }
-                };
-                
-                // Connection state monitoring
-                this.peerConnection.onconnectionstatechange = () => {
-                    logMessage('Connection state: ' + this.peerConnection.connectionState);
-                    
-                    if (this.peerConnection.connectionState === 'connected') {
-                        logMessage('Peer connection established!');
-                    } else if (['disconnected', 'failed', 'closed'].includes(this.peerConnection.connectionState)) {
-                        this.handleCallEnded();
-                    }
-                };
-                
-                // ICE connection state
-                this.peerConnection.oniceconnectionstatechange = () => {
-                    logMessage('ICE connection state: ' + this.peerConnection.iceConnectionState);
-                };
-                
-                logMessage('Peer connection created');
-            }
-            
-            async initiateCall(receiverId, callType = 'audio') {
-                if (this.callInProgress) {
-                    logMessage('Call already in progress');
-                    return false;
-                }
-                
-                this.receiverId = receiverId;
-                this.callType = callType;
-                
-                // Create call record on the server
+            async initiateCall(receiverId, callType, callId, agoraToken = null) {
                 try {
-                    logMessage('Creating call record...');
-                    const response = await fetch(`${API_URL}/calls`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify({
-                            receiverId: receiverId,
-                            callType: callType,
-                            status: 'initiated'
-                        })
-                    });
+                    this.receiverId = receiverId;
+                    this.callType = callType;
+                    this.callId = callId;
                     
-                    if (!response.ok) {
-                        throw new Error('Failed to create call record');
+                    // Join the Agora channel
+                    // Normally you'd use a token from your server
+                    // For demo, we use the App ID credential mode (not secure for production)
+                    try {
+                        // Join the Agora channel using the callId as channel name
+                        await this.client.join(AGORA_APP_ID, callId, agoraToken, null);
+                        logMessage(`Joined Agora channel: ${callId}`);
+                    } catch (joinError) {
+                        console.error('Error joining Agora channel:', joinError);
+                        logMessage('Failed to join Agora channel: ' + joinError.message);
+                        return false;
                     }
                     
-                    const callRecord = await response.json();
-                    this.callId = callRecord.callId;
-                    logMessage('Call record created with ID: ' + this.callId);
-                } catch (error) {
-                    logMessage('Error creating call record: ' + error.message);
-                    return false;
-                }
-                
-                // Setup media
-                const mediaSetup = await this.setupLocalStream(callType === 'video');
-                if (!mediaSetup) {
-                    return false;
-                }
-                
-                // Create peer connection
-                this.createPeerConnection();
-                
-                // Create offer
-                try {
-                    const offer = await this.peerConnection.createOffer();
-                    await this.peerConnection.setLocalDescription(offer);
-                    logMessage('Created and set local offer');
+                    // Create and publish the local tracks
+                    try {
+                        // Create audio track
+                        this.localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+                        
+                        // Create video track if this is a video call
+                        if (callType === 'video') {
+                            this.localVideoTrack = await AgoraRTC.createCameraVideoTrack();
+                            this.localVideoTrack.play(localStreamContainer);
+                        }
+                        
+                        // Publish the local tracks to the channel
+                        await this.client.publish(callType === 'video' 
+                            ? [this.localAudioTrack, this.localVideoTrack] 
+                            : [this.localAudioTrack]);
+                        
+                        logMessage(`Published local ${callType} tracks to the channel`);
+                    } catch (trackError) {
+                        console.error('Error with local tracks:', trackError);
+                        logMessage('Failed to create or publish media tracks: ' + trackError.message);
+                        await this.client.leave();
+                        return false;
+                    }
                     
-                    // Send offer to receiver
+                    // Send signal to the receiver through our socket
                     this.socket.emit('webrtc_offer', {
-                        offer: offer,
                         receiverId: receiverId,
-                        callType: callType
+                        callType: callType,
+                        callId: callId
                     });
                     
-                    logMessage('Sent offer to receiver');
+                    logMessage(`Call signal sent to ${receiverId}`);
                     this.callInProgress = true;
                     
                     return true;
                 } catch (error) {
-                    logMessage('Error creating offer: ' + error.message);
-                    this.cleanupCall();
+                    console.error('Error initiating call:', error);
+                    logMessage('Error initiating call: ' + error.message);
+                    this.cleanup();
                     return false;
                 }
             }
             
-            async acceptCurrentCall() {
-                if (!this.incomingCallData) {
-                    logMessage('No incoming call to accept');
-                    return false;
-                }
-                
-                const { callerId, offer, callType } = this.incomingCallData;
-                this.receiverId = callerId;
-                this.callType = callType;
-                
-                // Setup media
-                const mediaSetup = await this.setupLocalStream(callType === 'video');
-                if (!mediaSetup) {
-                    this.rejectCurrentCall('media_access_failed');
-                    return false;
-                }
-                
-                // Create peer connection
-                this.createPeerConnection();
-                
-                // Set remote description (the offer)
+            async joinCall(callerId, callType, callId, agoraToken = null) {
                 try {
-                    await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-                    logMessage('Set remote description from offer');
+                    this.receiverId = callerId; // In this case, caller becomes receiver
+                    this.callType = callType;
+                    this.callId = callId;
                     
-                    // Create answer
-                    const answer = await this.peerConnection.createAnswer();
-                    await this.peerConnection.setLocalDescription(answer);
-                    logMessage('Created and set local answer');
+                    // Join the Agora channel
+                    try {
+                        await this.client.join(AGORA_APP_ID, callId, agoraToken, null);
+                        logMessage(`Joined Agora channel: ${callId}`);
+                    } catch (joinError) {
+                        console.error('Error joining Agora channel:', joinError);
+                        logMessage('Failed to join Agora channel: ' + joinError.message);
+                        return false;
+                    }
                     
-                    // Send answer to caller
-                    this.socket.emit('webrtc_answer', {
-                        answer: answer,
-                        receiverId: callerId
+                    // Create and publish the local tracks
+                    try {
+                        // Create audio track
+                        this.localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+                        
+                        // Create video track if this is a video call
+                        if (callType === 'video') {
+                            this.localVideoTrack = await AgoraRTC.createCameraVideoTrack();
+                            this.localVideoTrack.play(localStreamContainer);
+                        }
+                        
+                        // Publish the local tracks to the channel
+                        await this.client.publish(callType === 'video' 
+                            ? [this.localAudioTrack, this.localVideoTrack] 
+                            : [this.localAudioTrack]);
+                        
+                        logMessage(`Published local ${callType} tracks to the channel`);
+                    } catch (trackError) {
+                        console.error('Error with local tracks:', trackError);
+                        logMessage('Failed to create or publish media tracks: ' + trackError.message);
+                        await this.client.leave();
+                        return false;
+                    }
+                    
+                    // Notify the caller that we answered
+                    this.socket.emit('call_answered', {
+                        callerId: callerId,
+                        callId: callId
                     });
                     
-                    logMessage('Sent answer to caller');
+                    logMessage('Call answered signal sent');
                     this.callInProgress = true;
-                    this.incomingCallData = null;
                     
                     return true;
                 } catch (error) {
-                    logMessage('Error accepting call: ' + error.message);
-                    this.cleanupCall();
+                    console.error('Error joining call:', error);
+                    logMessage('Error joining call: ' + error.message);
+                    this.cleanup();
                     return false;
                 }
             }
             
-            rejectCurrentCall(reason = 'rejected_by_user') {
-                if (!this.incomingCallData) {
-                    logMessage('No incoming call to reject');
-                    return;
+            toggleAudio() {
+                if (!this.localAudioTrack) return false;
+                
+                if (this.audioMuted) {
+                    this.localAudioTrack.setMuted(false);
+                    this.audioMuted = false;
+                    return false;
+                } else {
+                    this.localAudioTrack.setMuted(true);
+                    this.audioMuted = true;
+                    return true;
                 }
-                
-                const { callerId } = this.incomingCallData;
-                
-                this.socket.emit('webrtc_reject_call', {
-                    callerId: callerId,
-                    reason: reason
-                });
-                
-                logMessage('Rejected call: ' + reason);
-                this.incomingCallData = null;
             }
             
-            endCall() {
-                if (!this.callInProgress) {
-                    logMessage('No call in progress');
-                    return;
+            toggleVideo() {
+                if (!this.localVideoTrack) return false;
+                
+                if (this.videoOff) {
+                    this.localVideoTrack.setMuted(false);
+                    this.videoOff = false;
+                    return false;
+                } else {
+                    this.localVideoTrack.setMuted(true);
+                    this.videoOff = true;
+                    return true;
                 }
-                
-                // Notify the other user
-                this.socket.emit('webrtc_end_call', {
-                    receiverId: this.receiverId
-                });
-                
-                logMessage('Sent end call signal');
-                
-                // Update call status on server
-                if (this.callId) {
-                    this.updateCallStatus('ended');
-                }
-                
-                this.handleCallEnded();
             }
             
-            handleCallEnded() {
-                // Clean up resources
-                this.cleanupCall();
-                
-                // Update UI
-                endCallBtn.disabled = true;
-                audioCallBtn.disabled = false;
-                videoCallBtn.disabled = false;
-                
-                logMessage('Call ended');
+            async endCall(remoteEnded = false) {
+                try {
+                    if (!remoteEnded) {
+                        // Send end call signal to the remote user
+                        this.socket.emit('call_ended', {
+                            receiverId: this.receiverId,
+                            callId: this.callId
+                        });
+                        
+                        // Update call status on the server
+                        try {
+                            await fetch(`${API_URL}/calls/${this.callId}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${token}`
+                                },
+                                body: JSON.stringify({
+                                    status: 'ended'
+                                })
+                            });
+                            
+                            logMessage('Call status updated to: ended');
+                        } catch (error) {
+                            console.error('Error updating call status:', error);
+                            logMessage('Error updating call status: ' + error.message);
+                        }
+                    }
+                    
+                    // Clean up resources
+                    this.cleanup();
+                    
+                    // Reset UI state
+                    handleCallEnded();
+                } catch (error) {
+                    console.error('Error ending call:', error);
+                    logMessage('Error ending call: ' + error.message);
+                }
             }
             
-            handleCallRejected() {
-                // Clean up resources
-                this.cleanupCall();
-                
-                // Update UI
-                endCallBtn.disabled = true;
-                audioCallBtn.disabled = false;
-                videoCallBtn.disabled = false;
-                
-                alert('Call was rejected');
-            }
-            
-            cleanupCall() {
-                // Stop all tracks in the streams
-                if (this.localStream) {
-                    this.localStream.getTracks().forEach(track => {
-                        track.stop();
-                        logMessage(`Stopped ${track.kind} track`);
-                    });
-                    this.localStream = null;
+            async cleanup() {
+                // Close and clean up audio track
+                if (this.localAudioTrack) {
+                    this.localAudioTrack.close();
+                    this.localAudioTrack = null;
                 }
                 
-                // Clear video elements
-                localVideo.srcObject = null;
-                remoteVideo.srcObject = null;
+                // Close and clean up video track
+                if (this.localVideoTrack) {
+                    this.localVideoTrack.close();
+                    this.localVideoTrack = null;
+                }
                 
-                // Close peer connection
-                if (this.peerConnection) {
-                    this.peerConnection.close();
-                    this.peerConnection = null;
-                    logMessage('Closed peer connection');
+                // Leave the channel
+                if (this.client) {
+                    try {
+                        await this.client.leave();
+                        logMessage('Left the Agora channel');
+                    } catch (error) {
+                        console.error('Error leaving channel:', error);
+                        logMessage('Error leaving channel: ' + error.message);
+                    }
                 }
                 
                 // Reset state
                 this.callInProgress = false;
-                this.remoteStream = null;
-                
-                // Keep callId for the record but reset other call-specific properties
                 this.receiverId = null;
-                this.callType = null;
+                this.callId = null;
+                this.audioMuted = false;
+                this.videoOff = false;
                 
-                logMessage('Call cleanup completed');
+                logMessage('Resources cleaned up');
             }
             
-            async updateCallStatus(status) {
-                if (!this.callId) {
-                    logMessage('No call ID to update status');
-                    return;
-                }
-                
-                try {
-                    const response = await fetch(`${API_URL}/calls/${this.callId}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify({
-                            status: status
-                        })
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error('Failed to update call status');
-                    }
-                    
-                    logMessage(`Call status updated to: ${status}`);
-                } catch (error) {
-                    logMessage('Error updating call status: ' + error.message);
-                }
+            resetUI() {
+                // Clear video containers
+                localStreamContainer.innerHTML = '';
+                remoteStreamContainer.innerHTML = '';
             }
         }
     </script>

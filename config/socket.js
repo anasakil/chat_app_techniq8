@@ -1,7 +1,6 @@
 // config/socket.js
 const crypto = require('crypto');
 const messageQueue = require('../utils/messageQueue');
-const webrtcConfig = require('./webrtc');
 
 // Enhanced encryption/decryption functions directly in socket.js
 const encryption = (text, secret) => {
@@ -113,9 +112,6 @@ module.exports = (io) => {
   // Generate a simple secret key (should be moved to environment variables in production)
   const ENCRYPTION_SECRET = process.env.SOCKET_ENCRYPTION_SECRET || generateSecureKey();
   console.log('Using encryption secret for this session');
-  
-  // Initialize the WebRTC module with our socket.io instance and online users map
-  const webRTCConfig = webrtcConfig(io, onlineUsers);
   
   // Debug: Log active connections every 30 seconds
   setInterval(() => {
@@ -300,6 +296,60 @@ module.exports = (io) => {
       }
     });
     
+    // Agora signaling
+    socket.on('webrtc_offer', (data) => {
+      const receiverSocketId = onlineUsers.get(data.receiverId);
+      if (receiverSocketId) {
+        console.log(`Forwarding call offer from ${socket.userId} to ${data.receiverId}`);
+        io.to(receiverSocketId).emit('incoming_call', {
+          callerId: socket.userId,
+          callerName: socket.username || "User", // You might want to fetch the username
+          callId: data.callId,
+          callType: data.callType
+        });
+      } else {
+        console.log(`Receiver ${data.receiverId} is offline, cannot forward call`);
+        socket.emit('call_status_update', {
+          callId: data.callId,
+          status: 'missed',
+          reason: 'user_offline'
+        });
+      }
+    });
+    
+    socket.on('call_answered', (data) => {
+      const callerSocketId = onlineUsers.get(data.callerId);
+      if (callerSocketId) {
+        console.log(`Notifying ${data.callerId} that call was answered`);
+        io.to(callerSocketId).emit('call_answered', {
+          callId: data.callId,
+          answeredBy: socket.userId
+        });
+      }
+    });
+    
+    socket.on('call_rejected', (data) => {
+      const callerSocketId = onlineUsers.get(data.callerId);
+      if (callerSocketId) {
+        console.log(`Notifying ${data.callerId} that call was rejected`);
+        io.to(callerSocketId).emit('call_rejected', {
+          callId: data.callId,
+          reason: data.reason || 'rejected'
+        });
+      }
+    });
+    
+    socket.on('call_ended', (data) => {
+      const receiverSocketId = onlineUsers.get(data.receiverId);
+      if (receiverSocketId) {
+        console.log(`Notifying ${data.receiverId} that call was ended`);
+        io.to(receiverSocketId).emit('call_ended', {
+          callId: data.callId,
+          endedBy: socket.userId
+        });
+      }
+    });
+
     // Request conversation history (will only return what's in memory)
     socket.on('get_conversation', (data) => {
       const { userId, otherUserId } = data;
@@ -319,7 +369,7 @@ module.exports = (io) => {
         }))
       });
     });
-    
+
     // Message status updates
     socket.on('message_read', (data) => {
       console.log('Received message_read event:', data);
@@ -330,7 +380,7 @@ module.exports = (io) => {
       const senderSocketId = onlineUsers.get(senderId);
       
       if (senderSocketId) {
-        console.log(`Notifying sender ${senderId} that message ${messageId} was read`);
+        console.log(`Notifying ${senderId} that message ${messageId} was read`);
         
         io.to(senderSocketId).emit('message_status_update', {
           messageId,
@@ -425,5 +475,5 @@ module.exports = (io) => {
   }
   
   // Return the online users map so it can be used elsewhere
-  return { onlineUsers, webRTCConfig };
+  return { onlineUsers };
 };

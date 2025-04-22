@@ -15,7 +15,8 @@ const messageRoutes = require('./routes/messageRoutes');
 const conversationRoutes = require('./routes/conversationRoutes');
 const fileRoutes = require('./routes/fileRoutes');
 const callRoutes = require('./routes/callRoutes');
-const keyStatusRoutes = require('./routes/keyStatusRoutes'); // Added key status routes
+const keyStatusRoutes = require('./routes/keyStatusRoutes');
+const agoraRoutes = require('./routes/agoraRoutes'); // Added Agora routes
  
 // Initialize Express
 const app = express();
@@ -47,7 +48,7 @@ mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
  
-// Socket.io and WebRTC setup
+// Socket.io setup
 const socketHandler = require('./config/socket')(io);
 
 // Middleware to make socket available in routes
@@ -64,8 +65,9 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/calls', callRoutes);
-app.use('/api/keys', keyStatusRoutes); // Added key status routes
-
+app.use('/api/keys', keyStatusRoutes);
+app.use('/api/calls', agoraRoutes); // Added Agora routes
+ 
 // Default route
 app.get('/', (req, res) => {
   res.send('API is running...');
