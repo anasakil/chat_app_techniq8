@@ -58,5 +58,17 @@
     "status": "pending",
     "encrypted": true,
     "queuedAt": "2025-04-21T14:05:29.793Z"
+  },
+  {
+    "_id": "temp_1745335692009",
+    "sender": "68027b8832336ab5cd4fd11a",
+    "receiver": "68027baf32336ab5cd4fd128",
+    "content": "Hello! 👋",
+    "rawContent": "Hello! 👋",
+    "contentType": "text",
+    "createdAt": "2025-04-22T15:28:13.211Z",
+    "status": "pending",
+    "encrypted": true,
+    "queuedAt": "2025-04-22T15:28:13.212Z"
   }
 ]
