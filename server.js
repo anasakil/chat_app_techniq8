@@ -66,7 +66,10 @@ app.use('/api/conversations', conversationRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/calls', callRoutes);
 app.use('/api/keys', keyStatusRoutes);
-app.use('/api/calls', agoraRoutes); // Added Agora routes
+app.use('/api/calls', agoraRoutes); 
+app.get('/', (req, res) => {
+  res.send('Chat App API is running successfully');
+});
  
 // Default route
 app.get('/', (req, res) => {
